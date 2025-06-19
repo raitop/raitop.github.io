@@ -323,19 +323,28 @@
         const modalMessage = document.getElementById('modal-message');
         const modalButtons = document.getElementById('modal-buttons');
 
-        // --- DATA STATE ---
-        let events = [];
+        // --- DATA STATE (PRE-POPULATED) ---
+        let events = [
+            { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bojongsoang, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
+            { "name": "Bunka no Hi", "date": "28/06/2025", "location": "Cihampelas Walk, Bandung", "socialMedia": "@bunkanohi_", "priceText": "Free", "isFree": true },
+            { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
+            { "name": "Genshiken ITB", "date": "05/07/2025", "location": "Aula Timur ITB", "socialMedia": "@genshikenitb", "priceText": "TBA", "isFree": false },
+            { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
+            { "name": "Festival Axia: KomyuDoujin", "date": "06/09/2025", "location": "TBA", "socialMedia": "@festival.axia", "priceText": "TBA", "isFree": false }
+        ];
+        
         let settings = {
-            title: 'Upcoming Events',
-            subtitle: "Don't Miss Out!",
-            background: 'deep-space',
-            footer: 'Generated with Event Poster Maker',
-            eventsPerPage: 9,
-            showTimestamp: false,
-            showUrl: false,
-            titleFontSize: 144, // 9xl in px
-            customGradient: { start: '#1f2937', end: '#111827' }
+            "title": "ACGN Events in Bandung",
+            "subtitle": "Updated as of 19/06/2025, made by @Namchee",
+            "background": "deep-space",
+            "footer": "Contact @Namchee on X/Twitter for corrections",
+            "eventsPerPage": 9,
+            "showTimestamp": true,
+            "showUrl": false,
+            "titleFontSize": "144",
+            "customGradient": { "start": "#1f2937", "end": "#111827" }
         };
+
         const gradients = {
             'deep-space': 'linear-gradient(to bottom right, #1f2937, #111827)',
             'sunset': 'linear-gradient(to bottom right, #7b2cbf, #f97316)',
@@ -388,8 +397,11 @@
             if (storedState) {
                 try {
                     const loadedState = JSON.parse(storedState);
-                    events = loadedState.events || [];
-                    settings = { ...settings, ...loadedState.settings };
+                    // Only load if there's something in localStorage, otherwise keep defaults
+                    if (loadedState.events && loadedState.events.length > 0) {
+                        events = loadedState.events;
+                        settings = { ...settings, ...loadedState.settings };
+                    }
                 } catch(e) {
                     console.error("Could not parse state from localStorage", e);
                     localStorage.removeItem('posterGeneratorState');
@@ -788,7 +800,13 @@
                 autohide: true,
                 buttonClass: 'btn'
             }); 
-            loadState();
+            
+            // Check localStorage first. If it's empty, the hardcoded defaults will be used.
+            const storedState = localStorage.getItem('posterGeneratorState');
+            if (storedState) {
+                loadState();
+            }
+
             renderCustomizations();
             renderEventsInPreview();
             updatePreviewSize(); // Initial sizing of the preview
@@ -832,4 +850,3 @@
     </script>
 </body>
 </html>
-```
