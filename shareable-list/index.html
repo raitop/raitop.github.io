@@ -11,9 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-    <!-- Material Web Components (M3) -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web/all.js?module"></script>
-
     <style>
         /* Base styles and M3 Dark Theme */
         body {
@@ -122,8 +119,10 @@
 
     <script type="module">
         // ========================================================================
-        // --- STEP 1: IMPORT YOUR DATA ---
+        // --- STEP 1: IMPORT LIBRARIES AND DATA ---
         // ========================================================================
+        // By importing the library here, we ensure it's loaded before our code runs.
+        import 'https://cdn.jsdelivr.net/npm/@material/web/all.js?module';
         import { data } from './data.js';
 
         // ========================================================================
