@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2canvas library for converting HTML to image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- VanillaJS Datepicker for calendar input -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker-bs5.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/js/datepicker-full.min.js"></script>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +48,31 @@
         .html2canvas-container .remove-btn {
             display: none;
         }
+        /* Custom styles for the datepicker */
+        .datepicker-picker {
+            background-color: #374151; /* gray-700 */
+            border-radius: 1rem;
+            border: 1px solid #4b5563; /* gray-600 */
+        }
+        .datepicker-picker span {
+             color: #d1d5db; /* gray-300 */
+        }
+        .datepicker-picker .datepicker-cell:not(.disabled):hover {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .datepicker-picker .datepicker-cell.selected, .datepicker-picker .datepicker-cell.selected:hover {
+             background-color: #4f46e5; /* indigo-600 */
+             color: #fff;
+        }
+        .datepicker-picker .datepicker-cell.focused:not(.selected) {
+            background-color: #374151;
+            border: 1px solid #6366f1;
+        }
+         .datepicker-picker .datepicker-cell.today:not(.selected){
+            background-color: #374151;
+            border: 1px solid #9ca3af;
+        }
+
     </style>
 </head>
 <body class="bg-gray-800 text-white">
@@ -66,8 +94,8 @@
                         <input type="text" id="event-name" name="event-name" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                     </div>
                     <div>
-                        <label for="event-date" class="block text-sm font-medium text-gray-300">Date (Day/Month/Year)</label>
-                        <input type="text" id="event-date" name="event-date" placeholder="e.g., 25/12/2025" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        <label for="event-date" class="block text-sm font-medium text-gray-300">Date</label>
+                        <input type="text" id="event-date" name="event-date" placeholder="Select a date" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2" autocomplete="off">
                     </div>
                     <div>
                         <label for="event-location" class="block text-sm font-medium text-gray-300">Location</label>
@@ -116,13 +144,13 @@
                     <!-- This div is scaled down -->
                     <div id="poster-preview" class="transform origin-top-left h-full w-full" style="transform: scale(calc(1/3)); width: 300%; height: 300%;">
                         <!-- The actual poster content that will be rendered -->
-                        <div id="poster-content" class="text-white flex flex-col p-16">
+                        <div id="poster-content" class="text-white flex flex-col px-20 py-24">
                             <header class="text-center">
                                 <h1 class="text-9xl font-black tracking-tighter uppercase">Upcoming Events</h1>
                                 <p class="text-5xl text-gray-400 mt-2">Don't Miss Out!</p>
                             </header>
                             <!-- Using class instead of ID for safer cloning -->
-                            <main class="event-list-container flex-grow space-y-10 overflow-y-auto px-4 py-12">
+                            <main class="event-list-container flex-grow space-y-10 overflow-y-auto py-12">
                                 <!-- Events will be dynamically inserted here -->
                             </main>
                             <footer class="text-center text-gray-500 text-2xl">
@@ -354,7 +382,16 @@
         }
         
         // --- Event Listeners ---
-        document.addEventListener('DOMContentLoaded', loadEvents);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the datepicker
+            const datepicker = new Datepicker(eventDateInput, {
+                format: 'dd/mm/yyyy',
+                autohide: true,
+                buttonClass: 'btn'
+            }); 
+            // Load events from storage
+            loadEvents();
+        });
         eventForm.addEventListener('submit', addEvent);
         isFreeCheckbox.addEventListener('change', togglePriceInput);
         downloadBtn.addEventListener('click', downloadImage);
