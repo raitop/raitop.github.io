@@ -450,17 +450,18 @@
                 `
                 : '';
             
+            // Added contenteditable and data attributes for direct editing
             eventElement.innerHTML = `
                 <div class="flex justify-between items-start gap-4">
-                    <h3 class="text-5xl font-bold text-white break-words min-w-0">${event.name}</h3>
+                    <h3 class="text-5xl font-bold text-white break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
                     <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0 pl-4">${event.priceText}</p>
                 </div>
                 <div class="mt-4 text-3xl text-gray-300">
                     <div class="flex flex-wrap items-center gap-x-4">
                         <span>${event.date}</span>
                         <span class="text-gray-500">|</span>
-                        <span>${event.location}</span>
-                        ${event.socialMedia ? `<span class="text-gray-500">|</span><span>${event.socialMedia}</span>` : ''}
+                        <span contenteditable="true" data-index="${index}" data-field="location">${event.location}</span>
+                        ${event.socialMedia ? `<span class="text-gray-500">|</span><span contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
                     </div>
                 </div>
             `;
@@ -663,17 +664,27 @@
         function handleDirectEdit(e) {
             const element = e.target;
             const key = element.dataset.setting;
-            const newValue = element.textContent;
-
-            if (key && settings[key] !== newValue) {
-                settings[key] = newValue;
-                settingToInputMap[key].value = newValue; // Sync input field
-                saveState();
+            
+            if (key) { // For title, subtitle, footer
+                const newValue = element.textContent;
+                if (settings[key] !== newValue) {
+                    settings[key] = newValue;
+                    settingToInputMap[key].value = newValue;
+                    saveState();
+                }
+            } else if (element.dataset.field) { // For event list items
+                 const index = parseInt(element.dataset.index, 10);
+                 const field = element.dataset.field;
+                 const newValue = element.textContent;
+                 if (events[index] && events[index][field] !== newValue) {
+                    events[index][field] = newValue;
+                    saveState();
+                 }
             }
         }
         
         function preventLineBreaks(e) {
-            if (e.key === 'Enter') {
+            if (e.target.isContentEditable && e.key === 'Enter') {
                 e.preventDefault();
                 e.target.blur();
             }
@@ -817,14 +828,9 @@
         gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; saveState(); renderCustomizations();});
         gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; saveState(); renderCustomizations();});
 
-        // Direct editing listeners (from canvas)
-        previewTitle.addEventListener('blur', handleDirectEdit);
-        previewSubtitle.addEventListener('blur', handleDirectEdit);
-        previewFooter.addEventListener('blur', handleDirectEdit);
-        
-        previewTitle.addEventListener('keydown', preventLineBreaks);
-        previewSubtitle.addEventListener('keydown', preventLineBreaks);
-        previewFooter.addEventListener('keydown', preventLineBreaks);
+        // Use focusout which bubbles, unlike blur
+        posterContent.addEventListener('focusout', handleDirectEdit);
+        posterContent.addEventListener('keydown', preventLineBreaks);
 
         // Other event listeners
         eventForm.addEventListener('submit', addEvent);
