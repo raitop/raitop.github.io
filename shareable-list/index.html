@@ -121,94 +121,127 @@
         // ========================================================================
         // --- STEP 1: IMPORT LIBRARIES AND DATA ---
         // ========================================================================
-        // By importing the library here, we ensure it's loaded before our code runs.
         import 'https://cdn.jsdelivr.net/npm/@material/web/all.js?module';
         import { data } from './data.js';
 
         // ========================================================================
-        // --- APP LOGIC --- (No need to edit below this line)
+        // --- APP LOGIC ---
         // ========================================================================
-
-        const selectedItems = new Set();
-        const itemGrid = document.getElementById('item-grid');
-        const downloadBtn = document.getElementById('download-btn');
-        const copyBtn = document.getElementById('copy-btn');
         
-        function renderItems() {
-            itemGrid.innerHTML = '';
-            data.forEach(group => {
-                const groupContainer = document.createElement('div');
-                const groupTitle = document.createElement('h2');
-                groupTitle.textContent = group.year;
-                groupContainer.appendChild(groupTitle);
-                
-                const chipSet = document.createElement('md-chip-set');
+        /**
+         * Initializes the application after Material Web Components are ready.
+         */
+        async function initializeApp() {
+            // FIX: Wait for a key component to be defined before running the app logic.
+            // This prevents race conditions where the script tries to create elements
+            // before they have been registered by the Material library.
+            await customElements.whenDefined('md-filled-button');
 
-                group.items.forEach(item => {
-                    const chip = document.createElement('md-filter-chip');
-                    chip.label = item.title;
-                    chip.dataset.id = item.id;
-
-                    if (selectedItems.has(item.id)) {
-                        chip.selected = true;
-                    }
-
-                    chip.addEventListener('click', () => {
-                        handleItemClick(item.id, chip);
-                    });
+            const selectedItems = new Set();
+            const itemGrid = document.getElementById('item-grid');
+            const downloadBtn = document.getElementById('download-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            
+            function renderItems() {
+                itemGrid.innerHTML = '';
+                data.forEach(group => {
+                    const groupContainer = document.createElement('div');
+                    const groupTitle = document.createElement('h2');
+                    groupTitle.textContent = group.year;
+                    groupContainer.appendChild(groupTitle);
                     
-                    chipSet.appendChild(chip);
+                    const chipSet = document.createElement('md-chip-set');
+
+                    group.items.forEach(item => {
+                        const chip = document.createElement('md-filter-chip');
+                        chip.label = item.title;
+                        chip.dataset.id = item.id;
+
+                        if (selectedItems.has(item.id)) {
+                            chip.selected = true;
+                        }
+
+                        chip.addEventListener('click', () => {
+                            handleItemClick(item.id, chip);
+                        });
+                        
+                        chipSet.appendChild(chip);
+                    });
+
+                    groupContainer.appendChild(chipSet);
+                    itemGrid.appendChild(groupContainer);
                 });
-
-                groupContainer.appendChild(chipSet);
-                itemGrid.appendChild(groupContainer);
-            });
-        }
-
-        function handleItemClick(id, chip) {
-            // The 'selected' property on the chip updates automatically on click.
-            // We just need to sync our Set with the chip's state.
-            if (chip.selected) {
-                selectedItems.add(id);
-            } else {
-                selectedItems.delete(id);
             }
-        }
-        
-        // --- Canvas Helper Functions ---
 
-        /**
-         * Draws a rectangle with rounded corners on a canvas context.
-         */
-        function drawRoundRect(ctx, x, y, width, height, radius) {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-        }
+            function handleItemClick(id, chip) {
+                if (chip.selected) {
+                    selectedItems.add(id);
+                } else {
+                    selectedItems.delete(id);
+                }
+            }
+            
+            // --- Canvas Helper Functions ---
 
-        /**
-         * Calculates the optimal font size for a text to fit within a given area.
-         */
-        function calculateOptimalFontSize(ctx, text, width, height, maxFontSize, minFontSize) {
-            const lineHeightRatio = 1.2;
-            for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize--) {
-                ctx.font = `500 ${fontSize}px Roboto, sans-serif`; // Material uses 500 weight for labels
+            function drawRoundRect(ctx, x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+
+            function calculateOptimalFontSize(ctx, text, width, height, maxFontSize, minFontSize) {
+                const lineHeightRatio = 1.2;
+                for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize--) {
+                    ctx.font = `500 ${fontSize}px Roboto, sans-serif`;
+                    const words = text.split(' ');
+                    let line = '';
+                    const lines = [];
+                    const maxWidth = width - 32;
+
+                    for (let n = 0; n < words.length; n++) {
+                        const testLine = line + words[n] + ' ';
+                        if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                            lines.push(line);
+                            line = words[n] + ' ';
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    lines.push(line);
+
+                    const totalTextHeight = lines.length * (fontSize * lineHeightRatio);
+
+                    if (totalTextHeight <= height - 16) {
+                        return fontSize;
+                    }
+                }
+                return minFontSize;
+            }
+
+            function drawWrappedText(ctx, text, x, y, cardWidth, cardHeight, fontSize) {
+                ctx.textBaseline = 'middle';
+                const lineHeightRatio = 1.2;
+                const lineHeight = fontSize * lineHeightRatio;
+                ctx.font = `500 ${fontSize}px Roboto, sans-serif`;
+
                 const words = text.split(' ');
                 let line = '';
                 const lines = [];
-                const maxWidth = width - 32; // horizontal padding within card
+                const maxWidth = cardWidth - 32;
 
-                for (let n = 0; n < words.length; n++) {
+                for(let n = 0; n < words.length; n++) {
                     const testLine = line + words[n] + ' ';
-                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                    const metrics = ctx.measureText(testLine);
+                    const testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
                         lines.push(line);
                         line = words[n] + ' ';
                     } else {
@@ -217,207 +250,172 @@
                 }
                 lines.push(line);
 
-                const totalTextHeight = lines.length * (fontSize * lineHeightRatio);
+                const totalTextHeight = lines.length * lineHeight;
+                const firstLineY = y + (cardHeight / 2) - (totalTextHeight / 2) + (lineHeight / 2);
 
-                if (totalTextHeight <= height - 16) { // vertical padding within card
-                    return fontSize;
-                }
-            }
-            return minFontSize;
-        }
-
-        /**
-         * Draws multi-line, centered text inside a rectangle with a calculated font size.
-         */
-        function drawWrappedText(ctx, text, x, y, cardWidth, cardHeight, fontSize) {
-            ctx.textBaseline = 'middle';
-            const lineHeightRatio = 1.2;
-            const lineHeight = fontSize * lineHeightRatio;
-            ctx.font = `500 ${fontSize}px Roboto, sans-serif`;
-
-            const words = text.split(' ');
-            let line = '';
-            const lines = [];
-            const maxWidth = cardWidth - 32;
-
-            for(let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = ctx.measureText(testLine);
-                const testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    lines.push(line);
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            lines.push(line);
-
-            const totalTextHeight = lines.length * lineHeight;
-            const firstLineY = y + (cardHeight / 2) - (totalTextHeight / 2) + (lineHeight / 2);
-
-            lines.forEach((l, index) => {
-                ctx.fillText(l.trim(), x + cardWidth / 2, firstLineY + (index * lineHeight));
-            });
-            
-            ctx.textBaseline = 'alphabetic';
-        }
-
-        /**
-         * Prepares and generates an image showing ALL items as styled cards.
-         */
-        function generateImageWithCanvas() {
-            downloadBtn.disabled = true;
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Material Design 3 Dark Theme Colors
-            const M3_COLORS = {
-                surface: '#121316',
-                onSurface: '#E3E3E6',
-                onSurfaceVariant: '#C7C6CA',
-                primaryContainer: '#004C69',
-                onPrimaryContainer: '#C4E7FF',
-                surfaceContainerHighest: '#333538',
-            };
-            
-            const baseLayout = {
-                canvasWidth: 1080,
-                canvasHeight: 1920,
-                padding: 60,
-                gap: 25,
-                minCardWidth: 180,
-                mainTitleFontSize: 72,
-                yearTitleFontSize: 48,
-                mainTitleGap: 120,
-                yearTitleGap: 70,
-                groupEndGap: 50
-            };
-
-            const contentWidth = baseLayout.canvasWidth - (baseLayout.padding * 2);
-            const columns = Math.floor((contentWidth + baseLayout.gap) / (baseLayout.minCardWidth + baseLayout.gap));
-            const cardWidth = Math.floor((contentWidth - (columns - 1) * baseLayout.gap) / columns);
-            const cardHeight = Math.floor(cardWidth * 0.5);
-            
-            let idealContentHeight = baseLayout.mainTitleGap;
-            data.forEach(group => {
-                idealContentHeight += baseLayout.yearTitleGap;
-                const rows = Math.ceil(group.items.length / columns);
-                idealContentHeight += rows * (cardHeight + baseLayout.gap);
-                idealContentHeight += baseLayout.groupEndGap;
-            });
-            idealContentHeight -= baseLayout.groupEndGap;
-
-            let scale = 1.0;
-            const availableHeight = baseLayout.canvasHeight - (baseLayout.padding * 2);
-            if (idealContentHeight > availableHeight) {
-                scale = availableHeight / idealContentHeight;
-            }
-            
-            const finalLayout = {
-                ...baseLayout,
-                cardHeight: cardHeight * scale,
-                gap: baseLayout.gap * scale,
-                mainTitleFontSize: baseLayout.mainTitleFontSize * scale,
-                yearTitleFontSize: baseLayout.yearTitleFontSize * scale,
-                mainTitleGap: baseLayout.mainTitleGap * scale,
-                yearTitleGap: baseLayout.yearTitleGap * scale,
-                groupEndGap: baseLayout.groupEndGap * scale,
-            };
-
-            canvas.width = baseLayout.canvasWidth;
-            canvas.height = baseLayout.canvasHeight;
-            ctx.fillStyle = M3_COLORS.surface;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const finalContentHeight = idealContentHeight * scale;
-            let currentY = baseLayout.padding;
-            if (finalContentHeight < availableHeight) {
-                currentY += (availableHeight - finalContentHeight) / 2;
-            }
-
-            ctx.fillStyle = M3_COLORS.onSurface;
-            ctx.font = `700 ${finalLayout.mainTitleFontSize}px Roboto, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText('My Selections', canvas.width / 2, currentY);
-            currentY += finalLayout.mainTitleGap;
-
-            data.forEach(group => {
-                ctx.fillStyle = M3_COLORS.onSurfaceVariant;
-                ctx.font = `500 ${finalLayout.yearTitleFontSize}px Roboto, sans-serif`;
-                ctx.textAlign = 'left';
-                ctx.fillText(group.year, finalLayout.padding, currentY);
-                currentY += finalLayout.yearTitleGap;
-
-                group.items.forEach((item, index) => {
-                    const isSelected = selectedItems.has(item.id);
-                    const col = index % columns;
-                    const row = Math.floor(index / columns);
-                    
-                    const cardX = baseLayout.padding + col * (cardWidth + baseLayout.gap);
-                    const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
-
-                    ctx.fillStyle = isSelected ? M3_COLORS.primaryContainer : M3_COLORS.surfaceContainerHighest;
-                    drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 16 * scale);
-                    ctx.fill();
-
-                    const maxFontSize = finalLayout.cardHeight * 0.35;
-                    const minFontSize = 9 * scale;
-                    const optimalFontSize = calculateOptimalFontSize(ctx, item.title, cardWidth, finalLayout.cardHeight, maxFontSize, minFontSize);
-
-                    ctx.fillStyle = isSelected ? M3_COLORS.onPrimaryContainer : M3_COLORS.onSurfaceVariant;
-                    ctx.textAlign = 'center';
-                    drawWrappedText(ctx, item.title, cardX, cardY, cardWidth, finalLayout.cardHeight, optimalFontSize);
+                lines.forEach((l, index) => {
+                    ctx.fillText(l.trim(), x + cardWidth / 2, firstLineY + (index * lineHeight));
                 });
                 
-                const rowsInGroup = Math.ceil(group.items.length / columns);
-                currentY += rowsInGroup * (finalLayout.cardHeight + finalLayout.gap) + finalLayout.groupEndGap;
-            });
-
-            try {
-                const dataUrl = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = 'my-selections-story.png';
-                link.href = dataUrl;
-                link.click();
-            } catch (error) {
-                 console.error('Oops, something went wrong with canvas!', error);
-                alert('Could not generate image. See console for details.');
-            } finally {
-                downloadBtn.disabled = false;
-            }
-        }
-
-
-        function copyListToClipboard() {
-             if (selectedItems.size === 0) {
-                alert("Please select at least one item to copy!");
-                return;
+                ctx.textBaseline = 'alphabetic';
             }
 
-            let textToCopy = "My Selections:\n";
-            selectedItems.forEach(id => {
-                 data.forEach(group => {
-                    const foundItem = group.items.find(item => item.id === id);
-                    if (foundItem) {
-                        textToCopy += `- ${foundItem.title} (${group.year})\n`;
-                    }
+            function generateImageWithCanvas() {
+                downloadBtn.disabled = true;
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const M3_COLORS = {
+                    surface: '#121316',
+                    onSurface: '#E3E3E6',
+                    onSurfaceVariant: '#C7C6CA',
+                    primaryContainer: '#004C69',
+                    onPrimaryContainer: '#C4E7FF',
+                    surfaceContainerHighest: '#333538',
+                };
+                
+                const baseLayout = {
+                    canvasWidth: 1080,
+                    canvasHeight: 1920,
+                    padding: 60,
+                    gap: 25,
+                    minCardWidth: 180,
+                    mainTitleFontSize: 72,
+                    yearTitleFontSize: 48,
+                    mainTitleGap: 120,
+                    yearTitleGap: 70,
+                    groupEndGap: 50
+                };
+
+                const contentWidth = baseLayout.canvasWidth - (baseLayout.padding * 2);
+                const columns = Math.floor((contentWidth + baseLayout.gap) / (baseLayout.minCardWidth + baseLayout.gap));
+                const cardWidth = Math.floor((contentWidth - (columns - 1) * baseLayout.gap) / columns);
+                const cardHeight = Math.floor(cardWidth * 0.5);
+                
+                let idealContentHeight = baseLayout.mainTitleGap;
+                data.forEach(group => {
+                    idealContentHeight += baseLayout.yearTitleGap;
+                    const rows = Math.ceil(group.items.length / columns);
+                    idealContentHeight += rows * (cardHeight + baseLayout.gap);
+                    idealContentHeight += baseLayout.groupEndGap;
                 });
-            });
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert("Copied to clipboard!");
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                alert("Could not copy text to clipboard.");
-            });
+                idealContentHeight -= baseLayout.groupEndGap;
+
+                let scale = 1.0;
+                const availableHeight = baseLayout.canvasHeight - (baseLayout.padding * 2);
+                if (idealContentHeight > availableHeight) {
+                    scale = availableHeight / idealContentHeight;
+                }
+                
+                const finalLayout = {
+                    ...baseLayout,
+                    cardHeight: cardHeight * scale,
+                    gap: baseLayout.gap * scale,
+                    mainTitleFontSize: baseLayout.mainTitleFontSize * scale,
+                    yearTitleFontSize: baseLayout.yearTitleFontSize * scale,
+                    mainTitleGap: baseLayout.mainTitleGap * scale,
+                    yearTitleGap: baseLayout.yearTitleGap * scale,
+                    groupEndGap: baseLayout.groupEndGap * scale,
+                };
+
+                canvas.width = baseLayout.canvasWidth;
+                canvas.height = baseLayout.canvasHeight;
+                ctx.fillStyle = M3_COLORS.surface;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const finalContentHeight = idealContentHeight * scale;
+                let currentY = baseLayout.padding;
+                if (finalContentHeight < availableHeight) {
+                    currentY += (availableHeight - finalContentHeight) / 2;
+                }
+
+                ctx.fillStyle = M3_COLORS.onSurface;
+                ctx.font = `700 ${finalLayout.mainTitleFontSize}px Roboto, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('My Selections', canvas.width / 2, currentY);
+                currentY += finalLayout.mainTitleGap;
+
+                data.forEach(group => {
+                    ctx.fillStyle = M3_COLORS.onSurfaceVariant;
+                    ctx.font = `500 ${finalLayout.yearTitleFontSize}px Roboto, sans-serif`;
+                    ctx.textAlign = 'left';
+                    ctx.fillText(group.year, finalLayout.padding, currentY);
+                    currentY += finalLayout.yearTitleGap;
+
+                    group.items.forEach((item, index) => {
+                        const isSelected = selectedItems.has(item.id);
+                        const col = index % columns;
+                        const row = Math.floor(index / columns);
+                        
+                        const cardX = baseLayout.padding + col * (cardWidth + baseLayout.gap);
+                        const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
+
+                        ctx.fillStyle = isSelected ? M3_COLORS.primaryContainer : M3_COLORS.surfaceContainerHighest;
+                        drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 16 * scale);
+                        ctx.fill();
+
+                        const maxFontSize = finalLayout.cardHeight * 0.35;
+                        const minFontSize = 9 * scale;
+                        const optimalFontSize = calculateOptimalFontSize(ctx, item.title, cardWidth, finalLayout.cardHeight, maxFontSize, minFontSize);
+
+                        ctx.fillStyle = isSelected ? M3_COLORS.onPrimaryContainer : M3_COLORS.onSurfaceVariant;
+                        ctx.textAlign = 'center';
+                        drawWrappedText(ctx, item.title, cardX, cardY, cardWidth, finalLayout.cardHeight, optimalFontSize);
+                    });
+                    
+                    const rowsInGroup = Math.ceil(group.items.length / columns);
+                    currentY += rowsInGroup * (finalLayout.cardHeight + finalLayout.gap) + finalLayout.groupEndGap;
+                });
+
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = 'my-selections-story.png';
+                    link.href = dataUrl;
+                    link.click();
+                } catch (error) {
+                     console.error('Oops, something went wrong with canvas!', error);
+                    alert('Could not generate image. See console for details.');
+                } finally {
+                    downloadBtn.disabled = false;
+                }
+            }
+
+
+            function copyListToClipboard() {
+                 if (selectedItems.size === 0) {
+                    alert("Please select at least one item to copy!");
+                    return;
+                }
+
+                let textToCopy = "My Selections:\n";
+                selectedItems.forEach(id => {
+                     data.forEach(group => {
+                        const foundItem = group.items.find(item => item.id === id);
+                        if (foundItem) {
+                            textToCopy += `- ${foundItem.title} (${group.year})\n`;
+                        }
+                    });
+                });
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("Copied to clipboard!");
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert("Could not copy text to clipboard.");
+                });
+            }
+
+            downloadBtn.addEventListener('click', generateImageWithCanvas);
+            copyBtn.addEventListener('click', copyListToClipboard);
+
+            // Initial render of all items
+            renderItems();
         }
 
-        downloadBtn.addEventListener('click', generateImageWithCanvas);
-        copyBtn.addEventListener('click', copyListToClipboard);
-
-        renderItems();
+        // Start the application
+        initializeApp();
 
     </script>
 </body>
