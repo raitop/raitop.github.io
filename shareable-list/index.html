@@ -293,7 +293,12 @@
             // Set canvas size and draw background
             canvas.width = baseLayout.canvasWidth;
             canvas.height = baseLayout.canvasHeight;
-            ctx.fillStyle = '#111827'; // bg-gray-900
+            
+            // STYLE UPDATE: Draw the radial gradient background
+            const gradient = ctx.createRadialGradient(canvas.width / 2, 0, 0, canvas.width / 2, 0, canvas.height);
+            gradient.addColorStop(0, '#1f2937');
+            gradient.addColorStop(1, '#111827');
+            ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // 4. Vertically center the entire block within the available padded space
@@ -326,9 +331,23 @@
                     const cardX = baseLayout.sidePadding + col * (cardWidth + baseLayout.gap);
                     const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
 
+                    // STYLE UPDATE: Add shadow for selected cards
+                    if (isSelected) {
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                        ctx.shadowBlur = 20 * scale;
+                        ctx.shadowOffsetY = 5 * scale;
+                    }
+
                     ctx.fillStyle = isSelected ? '#1D4ED8' : '#374151';
                     drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 12 * scale);
                     ctx.fill();
+
+                    // STYLE UPDATE: Reset shadow after drawing the card fill
+                    if (isSelected) {
+                        ctx.shadowColor = 'transparent';
+                        ctx.shadowBlur = 0;
+                        ctx.shadowOffsetY = 0;
+                    }
 
                     ctx.strokeStyle = isSelected ? '#3B82F6' : '#4b5563';
                     ctx.lineWidth = 3 * scale;
