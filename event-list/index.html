@@ -87,6 +87,17 @@
             box-shadow: 0 0 15px rgba(139, 148, 162, 0.2);
             border-radius: 8px;
         }
+        
+        /* Style for the status message */
+        #status-message {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        #status-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
     </style>
 </head>
@@ -228,9 +239,15 @@
                         <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
                     </div>
                 </div>
+                
+                 <!-- Status Message Area -->
+                <div id="status-container" class="mt-4 h-8">
+                     <div id="status-message" class="text-center text-green-400 font-semibold"></div>
+                </div>
+
 
                 <!-- List Management Controls -->
-                <div class="mt-8">
+                <div class="mt-4">
                      <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">List Management</h2>
                      <div class="space-y-2">
                          <button id="sort-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
@@ -279,60 +296,73 @@
 
 
     <script>
-        // --- FORM & CONTROL DOM REFERENCES ---
-        const eventForm = document.getElementById('event-form');
-        const eventNameInput = document.getElementById('event-name');
-        const eventDateInput = document.getElementById('event-date');
-        const eventLocationInput = document.getElementById('event-location');
-        const eventSocialInput = document.getElementById('event-social');
-        const eventPriceInput = document.getElementById('event-price');
-        const isFreeCheckbox = document.getElementById('is-free');
-        const isTbaCheckbox = document.getElementById('is-tba');
-        
-        const posterTitleInput = document.getElementById('poster-title');
-        const posterSubtitleInput = document.getElementById('poster-subtitle');
-        const posterBackgroundSelect = document.getElementById('poster-background');
-        const posterFooterInput = document.getElementById('poster-footer');
-        const eventsPerPageInput = document.getElementById('events-per-page');
-        const showTimestampCheckbox = document.getElementById('show-timestamp');
-        const showUrlCheckbox = document.getElementById('show-url');
-        const titleFontSizeSlider = document.getElementById('title-font-size');
-        const fontSizeValueSpan = document.getElementById('font-size-value');
-        const customGradientControls = document.getElementById('custom-gradient-controls');
-        const gradientStartColorInput = document.getElementById('gradient-start-color');
-        const gradientEndColorInput = document.getElementById('gradient-end-color');
-        
-        const downloadBtn = document.getElementById('download-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const sortBtn = document.getElementById('sort-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const importBtn = document.getElementById('import-btn');
-        const importInput = document.getElementById('import-input');
-        const loadingIndicator = document.getElementById('loading-indicator');
+    // --- IIFE Wrapper to encapsulate the entire script ---
+    (function() {
+        // --- CONFIGURATION CONSTANTS ---
+        const CONFIG = {
+            LOCAL_STORAGE_KEY: 'posterGeneratorState',
+            DEBOUNCE_DELAY: 300,
+            STATUS_MESSAGE_DURATION: 2000,
+        };
 
-        // --- PREVIEW DOM REFERENCES ---
-        const previewWrapper = document.getElementById('preview-wrapper');
-        const posterScaler = document.getElementById('poster-scaler');
-        const posterContent = document.getElementById('poster-content');
-        const posterBackgroundOverlay = document.getElementById('poster-background-overlay');
-        const previewTitle = document.getElementById('preview-title');
-        const previewSubtitle = document.getElementById('preview-subtitle');
-        const previewListContainer = document.querySelector('#poster-content .event-list-container');
-        const previewTimestamp = document.getElementById('preview-timestamp');
-        const previewFooter = document.getElementById('preview-footer');
-        const previewUrl = document.getElementById('preview-url');
+        // --- DOM REFERENCES ---
+        const getEl = (id) => document.getElementById(id);
+        const queryEl = (selector) => document.querySelector(selector);
+        
+        // Form & Controls
+        const eventForm = getEl('event-form');
+        const eventNameInput = getEl('event-name');
+        const eventDateInput = getEl('event-date');
+        const eventLocationInput = getEl('event-location');
+        const eventSocialInput = getEl('event-social');
+        const eventPriceInput = getEl('event-price');
+        const isFreeCheckbox = getEl('is-free');
+        const isTbaCheckbox = getEl('is-tba');
+        const posterTitleInput = getEl('poster-title');
+        const posterSubtitleInput = getEl('poster-subtitle');
+        const posterBackgroundSelect = getEl('poster-background');
+        const posterFooterInput = getEl('poster-footer');
+        const eventsPerPageInput = getEl('events-per-page');
+        const showTimestampCheckbox = getEl('show-timestamp');
+        const showUrlCheckbox = getEl('show-url');
+        const titleFontSizeSlider = getEl('title-font-size');
+        const fontSizeValueSpan = getEl('font-size-value');
+        const customGradientControls = getEl('custom-gradient-controls');
+        const gradientStartColorInput = getEl('gradient-start-color');
+        const gradientEndColorInput = getEl('gradient-end-color');
+        
+        // Buttons & Indicators
+        const downloadBtn = getEl('download-btn');
+        const clearBtn = getEl('clear-btn');
+        const sortBtn = getEl('sort-btn');
+        const exportBtn = getEl('export-btn');
+        const importBtn = getEl('import-btn');
+        const importInput = getEl('import-input');
+        const loadingIndicator = getEl('loading-indicator');
+        const statusMessage = getEl('status-message');
 
-        // --- MODAL DOM REFERENCES ---
-        const modal = document.getElementById('custom-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-        const modalButtons = document.getElementById('modal-buttons');
+        // Preview Area
+        const previewWrapper = getEl('preview-wrapper');
+        const posterScaler = getEl('poster-scaler');
+        const posterContent = getEl('poster-content');
+        const posterBackgroundOverlay = getEl('poster-background-overlay');
+        const previewTitle = getEl('preview-title');
+        const previewSubtitle = getEl('preview-subtitle');
+        const previewListContainer = queryEl('#poster-content .event-list-container');
+        const previewTimestamp = getEl('preview-timestamp');
+        const previewFooter = getEl('preview-footer');
+        const previewUrl = getEl('preview-url');
+
+        // Modal
+        const modal = getEl('custom-modal');
+        const modalTitle = getEl('modal-title');
+        const modalMessage = getEl('modal-message');
+        const modalButtons = getEl('modal-buttons');
 
         // --- DATA STATE (PRE-POPULATED) ---
         let events = [
             { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bojongsoang, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
             { "name": "Bunka no Hi", "date": "28/06/2025", "location": "Cihampelas Walk, Bandung", "socialMedia": "@bunkanohi_", "priceText": "Free", "isFree": true },
-            { "name": "Bandung Lautan Creator Day 1", "date": "28/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
             { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
             { "name": "Genshiken ITB", "date": "05/07/2025", "location": "Aula Timur ITB", "socialMedia": "@genshikenitb", "priceText": "TBA", "isFree": false },
             { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
@@ -359,6 +389,28 @@
             'royal': 'linear-gradient(to bottom right, #7e22ce, #db2777)',
             'gotham': 'linear-gradient(to bottom right, #404040, #0a0a0a)'
         };
+        
+        // --- UTILITY FUNCTIONS ---
+        function debounce(func, delay = CONFIG.DEBOUNCE_DELAY) {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
+
+        let statusTimeout;
+        function showStatusMessage(message, isError = false) {
+            clearTimeout(statusTimeout);
+            statusMessage.textContent = message;
+            statusMessage.style.color = isError ? '#f87171' : '#4ade80'; // red-400 or green-400
+            statusMessage.classList.add('visible');
+            statusTimeout = setTimeout(() => {
+                statusMessage.classList.remove('visible');
+            }, CONFIG.STATUS_MESSAGE_DURATION);
+        }
 
         // --- MODAL FUNCTIONS ---
         function showAlert(title, message) {
@@ -367,7 +419,7 @@
             modalButtons.innerHTML = `<button id="modal-ok" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500">OK</button>`;
             modal.classList.remove('hidden');
             setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
-            document.getElementById('modal-ok').onclick = () => {
+            getEl('modal-ok').onclick = () => {
                  modal.firstElementChild.classList.add('scale-95');
                  setTimeout(() => modal.classList.add('hidden'), 300);
             };
@@ -386,8 +438,8 @@
                 modal.firstElementChild.classList.add('scale-95');
                 setTimeout(() => modal.classList.add('hidden'), 300);
             }
-            document.getElementById('modal-cancel').onclick = hideModal;
-            document.getElementById('modal-confirm').onclick = () => {
+            getEl('modal-cancel').onclick = hideModal;
+            getEl('modal-confirm').onclick = () => {
                 hideModal();
                 onConfirm();
             };
@@ -395,22 +447,23 @@
         
         // --- DATA PERSISTENCE ---
         const saveState = () => {
-            localStorage.setItem('posterGeneratorState', JSON.stringify({ events, settings }));
+            localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify({ events, settings }));
+            showStatusMessage('Changes saved!');
         };
+        const debouncedSaveState = debounce(saveState);
 
         const loadState = () => {
-            const storedState = localStorage.getItem('posterGeneratorState');
+            const storedState = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
             if (storedState) {
                 try {
                     const loadedState = JSON.parse(storedState);
-                    // Only load if there's something in localStorage, otherwise keep defaults
-                    if (loadedState.events && loadedState.events.length > 0) {
+                    if (loadedState.events && loadedState.settings) {
                         events = loadedState.events;
                         settings = { ...settings, ...loadedState.settings };
                     }
                 } catch(e) {
                     console.error("Could not parse state from localStorage", e);
-                    localStorage.removeItem('posterGeneratorState');
+                    localStorage.removeItem(CONFIG.LOCAL_STORAGE_KEY);
                 }
             }
         };
@@ -419,7 +472,7 @@
         function updatePreviewSize() {
             if (!previewWrapper || !posterScaler) return;
             const containerWidth = previewWrapper.offsetWidth;
-            const scale = containerWidth / 1080; // 1080 is the poster's native width
+            const scale = containerWidth / 1080;
             posterScaler.style.transform = `scale(${scale})`;
         }
 
@@ -433,13 +486,9 @@
             eventElement.className = 'event-item py-4 border-b border-white/20 flex-grow';
             
             let priceColor;
-            if (event.priceText === 'Free') {
-                priceColor = 'text-green-400';
-            } else if (event.priceText === 'TBA') {
-                priceColor = 'text-yellow-400';
-            } else {
-                priceColor = 'text-cyan-400';
-            }
+            if (event.priceText === 'Free') priceColor = 'text-green-400';
+            else if (event.priceText === 'TBA') priceColor = 'text-yellow-400';
+            else priceColor = 'text-cyan-400';
 
             const actionButtonsHtml = showActionButtons 
                 ? `
@@ -448,10 +497,8 @@
                         <svg class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                     </button>
                 </div>
-                `
-                : '';
+                ` : '';
             
-            // Added contenteditable and data attributes for direct editing
             eventElement.innerHTML = `
                 <div class="flex justify-between items-start gap-4">
                     <h3 class="text-5xl font-bold text-white break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
@@ -490,8 +537,7 @@
             });
         };
 
-        const renderCustomizations = () => {
-            // Sync form inputs with settings object
+        function updateFormControls() {
             posterTitleInput.value = settings.title;
             posterSubtitleInput.value = settings.subtitle;
             posterBackgroundSelect.value = settings.background;
@@ -503,8 +549,9 @@
             fontSizeValueSpan.textContent = settings.titleFontSize;
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
+        }
 
-            // Sync preview elements with settings object
+        function updatePreviewStyles() {
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
@@ -520,7 +567,7 @@
             previewFooter.textContent = settings.footer;
             previewTimestamp.style.display = 'none';
             previewUrl.style.display = 'none';
-        };
+        }
 
         // --- EVENT HANDLERS & LOGIC ---
         function formatPrice(price) {
@@ -559,7 +606,7 @@
                 location: eventLocationInput.value,
                 socialMedia: eventSocialInput.value,
                 priceText: priceText,
-                isFree: isFreeCheckbox.checked // Retained for potential future use
+                isFree: isFreeCheckbox.checked
             };
 
             events.push(newEvent);
@@ -639,10 +686,11 @@
                     if (importedState && importedState.events && importedState.settings) {
                         events = importedState.events;
                         settings = { ...settings, ...importedState.settings };
-                        saveState();
-                        renderCustomizations();
+                        updateFormControls();
+                        updatePreviewStyles();
                         renderEventsInPreview();
-                        showAlert('Success', 'Data imported successfully!');
+                        saveState();
+                        showStatusMessage('Data imported successfully!');
                     } else {
                         showAlert('Import Error', 'Invalid data file format.');
                     }
@@ -667,14 +715,14 @@
             if (!element || !element.isContentEditable) return;
             const key = element.dataset.setting;
             
-            if (key) { // For title, subtitle, footer
+            if (key) {
                 const newValue = element.textContent.trim();
                 if (settings[key] !== newValue) {
                     settings[key] = newValue;
                     settingToInputMap[key].value = newValue;
-                    saveState();
+                    debouncedSaveState();
                 }
-            } else if (element.dataset.field) { // For event list items
+            } else if (element.dataset.field) {
                  const index = parseInt(element.dataset.index, 10);
                  const field = element.dataset.field;
                  const newValue = element.textContent.trim();
@@ -696,20 +744,20 @@
                              newPriceText = formatPrice(numericValue);
                              events[index].isFree = false;
                          } else {
-                             newPriceText = 'TBA'; // Default to TBA if not a number or FREE/TBA
+                             newPriceText = 'TBA';
                              events[index].isFree = false;
                          }
                      }
                      
                      if (events[index].priceText !== newPriceText) {
                         events[index].priceText = newPriceText;
-                        saveState();
-                        renderEventsInPreview(); // Re-render to update colors and formatting
+                        debouncedSaveState();
+                        renderEventsInPreview(); 
                      }
                  } else {
                      if (events[index][field] !== newValue) {
                         events[index][field] = newValue;
-                        saveState();
+                        debouncedSaveState();
                      }
                  }
             }
@@ -743,7 +791,6 @@
                 const chunk = events.slice(i * eventsPerPage, (i + 1) * eventsPerPage);
 
                 const posterClone = posterContent.cloneNode(true);
-                // Make sure cloned text is not editable for the screenshot
                 posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
 
                 const titleEl = posterClone.querySelector('#preview-title');
@@ -828,60 +875,62 @@
         }
         
         // --- EVENT LISTENERS ---
-        document.addEventListener('DOMContentLoaded', () => {
+        function attachListeners() {
+            // Initial Setup on Load
             const datepicker = new Datepicker(eventDateInput, {
                 format: 'dd/mm/yyyy',
                 autohide: true,
                 buttonClass: 'btn'
             }); 
             
-            const storedState = localStorage.getItem('posterGeneratorState');
-            if (storedState) {
-                loadState();
-            }
-
-            renderCustomizations();
+            loadState(); // Load from localStorage if available
+            updateFormControls();
+            updatePreviewStyles();
             renderEventsInPreview();
             updatePreviewSize(); 
-        });
         
-        window.addEventListener('resize', updatePreviewSize); 
+            window.addEventListener('resize', updatePreviewSize); 
 
+            const debouncedUpdateStyles = debounce(updatePreviewStyles);
 
-        // Customization listeners (from form inputs)
-        posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; saveState(); renderCustomizations(); });
-        posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; saveState(); renderCustomizations(); });
-        posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; saveState(); renderCustomizations(); });
-        posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; saveState(); renderCustomizations(); });
-        eventsPerPageInput.addEventListener('change', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
-        showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
-        showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
-        titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = e.target.value; fontSizeValueSpan.textContent = e.target.value; saveState(); renderCustomizations(); });
-        gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; saveState(); renderCustomizations();});
-        gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; saveState(); renderCustomizations();});
+            // Customization listeners (from form inputs)
+            posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; previewTitle.textContent = e.target.value; debouncedSaveState(); });
+            posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; previewSubtitle.textContent = e.target.value; debouncedSaveState(); });
+            posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePreviewStyles(); saveState(); });
+            posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; previewFooter.textContent = e.target.value; debouncedSaveState(); });
+            eventsPerPageInput.addEventListener('change', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
+            showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
+            showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
+            titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = e.target.value; fontSizeValueSpan.textContent = e.target.value; previewTitle.style.fontSize = `${e.target.value}px`; debouncedSaveState(); });
+            gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
+            gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
 
-        // Use focusout which bubbles, unlike blur
-        posterContent.addEventListener('focusout', handleDirectEdit);
-        posterContent.addEventListener('keydown', preventLineBreaks);
+            // Direct editing listeners
+            posterContent.addEventListener('focusout', handleDirectEdit);
+            posterContent.addEventListener('keydown', preventLineBreaks);
 
-        // Other event listeners
-        eventForm.addEventListener('submit', addEvent);
-        isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
-        isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
-        eventPriceInput.addEventListener('input', () => togglePriceInput('input'));
+            // Other event listeners
+            eventForm.addEventListener('submit', addEvent);
+            isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
+            isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
+            eventPriceInput.addEventListener('input', () => togglePriceInput('input'));
 
-        downloadBtn.addEventListener('click', downloadImage);
-        clearBtn.addEventListener('click', clearAllEvents);
-        sortBtn.addEventListener('click', () => {
-            sortEvents();
-            saveState();
-            renderEventsInPreview();
-        });
-        previewListContainer.addEventListener('click', handleListInteraction);
-        exportBtn.addEventListener('click', exportData);
-        importBtn.addEventListener('click', () => importInput.click());
-        importInput.addEventListener('change', importData);
+            downloadBtn.addEventListener('click', downloadImage);
+            clearBtn.addEventListener('click', clearAllEvents);
+            sortBtn.addEventListener('click', () => {
+                sortEvents();
+                saveState();
+                renderEventsInPreview();
+            });
+            previewListContainer.addEventListener('click', handleListInteraction);
+            exportBtn.addEventListener('click', exportData);
+            importBtn.addEventListener('click', () => importInput.click());
+            importInput.addEventListener('change', importData);
+        }
 
+        document.addEventListener('DOMContentLoaded', attachListeners);
+
+    })();
     </script>
 </body>
 </html>
