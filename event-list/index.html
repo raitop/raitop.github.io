@@ -454,7 +454,7 @@
             eventElement.innerHTML = `
                 <div class="flex justify-between items-start gap-4">
                     <h3 class="text-5xl font-bold text-white break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
-                    <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0 pl-4">${event.priceText}</p>
+                    <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0 pl-4" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
                 </div>
                 <div class="mt-4 text-3xl text-gray-300">
                     <div class="flex flex-wrap items-center gap-x-4">
@@ -663,10 +663,11 @@
 
         function handleDirectEdit(e) {
             const element = e.target;
+            if (!element || !element.isContentEditable) return;
             const key = element.dataset.setting;
             
             if (key) { // For title, subtitle, footer
-                const newValue = element.textContent;
+                const newValue = element.textContent.trim();
                 if (settings[key] !== newValue) {
                     settings[key] = newValue;
                     settingToInputMap[key].value = newValue;
@@ -675,10 +676,40 @@
             } else if (element.dataset.field) { // For event list items
                  const index = parseInt(element.dataset.index, 10);
                  const field = element.dataset.field;
-                 const newValue = element.textContent;
-                 if (events[index] && events[index][field] !== newValue) {
-                    events[index][field] = newValue;
-                    saveState();
+                 const newValue = element.textContent.trim();
+                 
+                 if (!events[index]) return;
+
+                 if (field === 'priceText') {
+                     const upperCaseValue = newValue.toUpperCase();
+                     let newPriceText;
+                     if (upperCaseValue === 'FREE') {
+                         newPriceText = 'Free';
+                         events[index].isFree = true;
+                     } else if (upperCaseValue === 'TBA') {
+                         newPriceText = 'TBA';
+                         events[index].isFree = false;
+                     } else {
+                         const numericValue = parseFloat(newValue.replace(/[^0-9]/g, ''));
+                         if (!isNaN(numericValue)) {
+                             newPriceText = formatPrice(numericValue);
+                             events[index].isFree = false;
+                         } else {
+                             newPriceText = 'TBA'; // Default to TBA if not a number or FREE/TBA
+                             events[index].isFree = false;
+                         }
+                     }
+                     
+                     if (events[index].priceText !== newPriceText) {
+                        events[index].priceText = newPriceText;
+                        saveState();
+                        renderEventsInPreview(); // Re-render to update colors and formatting
+                     }
+                 } else {
+                     if (events[index][field] !== newValue) {
+                        events[index][field] = newValue;
+                        saveState();
+                     }
                  }
             }
         }
