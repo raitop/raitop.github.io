@@ -367,7 +367,26 @@
                 currentY += rowsInGroup * (finalLayout.cardHeight + finalLayout.gap) + finalLayout.groupEndGap;
             });
 
-            // 7. Generate and download the image
+            // 7. Draw footer content
+            const footerY = baseLayout.canvasHeight - (baseLayout.bottomPadding / 2);
+            const footerFontSize = 24 * scale;
+            ctx.font = `bold ${footerFontSize}px Inter, sans-serif`;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+
+            // Draw URL
+            let siteUrl = window.location.host; // Use just the host for a cleaner look
+            ctx.textAlign = 'left';
+            ctx.fillText(siteUrl, finalLayout.sidePadding, footerY);
+
+            // Draw Count
+            const totalItems = data.reduce((total, group) => total + group.items.length, 0);
+            const selectedCount = selectedItems.size;
+            const countText = `${selectedCount}/${totalItems}`;
+            ctx.textAlign = 'right';
+            ctx.fillText(countText, baseLayout.canvasWidth - finalLayout.sidePadding, footerY);
+
+
+            // 8. Generate and download the image
             try {
                 const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
