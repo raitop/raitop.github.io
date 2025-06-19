@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Selection Generator</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for a nicer look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* A few custom styles to make things pop */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .item-card {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #374151; /* gray-700 */
+        }
+        .item-card.selected {
+            background-color: #1D4ED8; /* blue-700 */
+            border-color: #3B82F6; /* blue-500 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .item-card:hover {
+            border-color: #6B7280; /* gray-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-bold text-white">Selection Generator</h1>
+            <p class="text-lg text-gray-400 mt-2">Click items to select them, then export your list as an image.</p>
+        </header>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center items-center gap-4 mb-10">
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                Download Image
+            </button>
+            <button id="copy-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                Copy List to Clipboard
+            </button>
+        </div>
+
+        <!-- This is where the grid of items will be rendered by JavaScript -->
+        <main id="item-grid" class="space-y-10">
+            <!-- Content will be generated here -->
+        </main>
+        
+        <footer class="text-center text-gray-500 mt-12 pb-4">
+            <p>Created with help from Gemini</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        // ========================================================================
+        // --- STEP 1: IMPORT YOUR DATA ---
+        // ========================================================================
+        import { data } from './data.js';
+
+        // ========================================================================
+        // --- APP LOGIC --- (No need to edit below this line)
+        // ========================================================================
+
+        const selectedItems = new Set();
+        const itemGrid = document.getElementById('item-grid');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        
+        function renderItems() {
+            itemGrid.innerHTML = '';
+            data.forEach(group => {
+                const groupContainer = document.createElement('div');
+                const groupTitle = document.createElement('h2');
+                groupTitle.className = 'text-2xl font-bold border-b-2 border-gray-700 pb-2 mb-4';
+                groupTitle.textContent = group.year;
+                groupContainer.appendChild(groupTitle);
+                
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+
+                group.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card bg-gray-800 p-3 rounded-lg cursor-pointer flex items-center justify-center text-center';
+                    card.textContent = item.title;
+                    card.dataset.id = item.id;
+
+                    if (selectedItems.has(item.id)) {
+                        card.classList.add('selected');
+                    }
+
+                    card.addEventListener('click', () => {
+                        handleItemClick(item.id);
+                    });
+                    
+                    itemsContainer.appendChild(card);
+                });
+
+                groupContainer.appendChild(itemsContainer);
+                itemGrid.appendChild(groupContainer);
+            });
+        }
+
+        function handleItemClick(id) {
+            if (selectedItems.has(id)) {
+                selectedItems.delete(id);
+            } else {
+                selectedItems.add(id);
+            }
+            renderItems();
+        }
+        
+        // --- Canvas Helper Functions ---
+
+        /**
+         * Draws a rectangle with rounded corners on a canvas context.
+         */
+        function drawRoundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        /**
+         * Calculates the optimal font size for a text to fit within a given area.
+         */
+        function calculateOptimalFontSize(ctx, text, width, height, maxFontSize, minFontSize) {
+            const lineHeightRatio = 1.2;
+            for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize--) {
+                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                const words = text.split(' ');
+                let line = '';
+                const lines = [];
+                const maxWidth = width - 20; // horizontal padding within card
+
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                        lines.push(line);
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line);
+
+                const totalTextHeight = lines.length * (fontSize * lineHeightRatio);
+
+                if (totalTextHeight <= height - 10) { // vertical padding within card
+                    return fontSize;
+                }
+            }
+            return minFontSize;
+        }
+
+        /**
+         * Draws multi-line, centered text inside a rectangle with a calculated font size.
+         */
+        function drawWrappedText(ctx, text, x, y, cardWidth, cardHeight, fontSize) {
+            // Set baseline to middle for easier vertical centering
+            ctx.textBaseline = 'middle';
+            
+            const lineHeightRatio = 1.2;
+            const lineHeight = fontSize * lineHeightRatio;
+            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+            const maxWidth = cardWidth - 20;
+
+            for(let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            const totalTextHeight = lines.length * lineHeight;
+            // Calculate the Y coordinate for the center of the first line of text.
+            const firstLineY = y + (cardHeight / 2) - (totalTextHeight / 2) + (lineHeight / 2);
+
+            lines.forEach((l, index) => {
+                ctx.fillText(l.trim(), x + cardWidth / 2, firstLineY + (index * lineHeight));
+            });
+            
+            // Reset baseline for other drawing operations
+            ctx.textBaseline = 'alphabetic';
+        }
+
+        /**
+         * Prepares and generates an image showing ALL items as styled cards.
+         */
+        function generateImageWithCanvas() {
+            const statusOriginalText = downloadBtn.textContent;
+            downloadBtn.textContent = 'Generating...';
+            downloadBtn.disabled = true;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Layout configuration for social media (1080x1920)
+            const baseLayout = {
+                canvasWidth: 1080,
+                canvasHeight: 1920,
+                padding: 60,
+                gap: 25,
+                minCardWidth: 180,
+                mainTitleFontSize: 72,
+                yearTitleFontSize: 48,
+                mainTitleGap: 120,
+                yearTitleGap: 70,
+                groupEndGap: 50
+            };
+
+            const contentWidth = baseLayout.canvasWidth - (baseLayout.padding * 2);
+            const columns = Math.floor((contentWidth + baseLayout.gap) / (baseLayout.minCardWidth + baseLayout.gap));
+            const cardWidth = Math.floor((contentWidth - (columns - 1) * baseLayout.gap) / columns);
+            const cardHeight = Math.floor(cardWidth * 0.5);
+            
+            // 1. Calculate the total height the content would occupy with ideal settings
+            let idealContentHeight = baseLayout.mainTitleGap;
+            data.forEach(group => {
+                idealContentHeight += baseLayout.yearTitleGap;
+                const rows = Math.ceil(group.items.length / columns);
+                idealContentHeight += rows * (cardHeight + baseLayout.gap);
+                idealContentHeight += baseLayout.groupEndGap;
+            });
+            idealContentHeight -= baseLayout.groupEndGap;
+
+            // 2. Determine the scaling factor if content overflows
+            let scale = 1.0;
+            const availableHeight = baseLayout.canvasHeight - (baseLayout.padding * 2);
+            if (idealContentHeight > availableHeight) {
+                scale = availableHeight / idealContentHeight;
+            }
+            
+            // 3. Create a final layout object with scaled vertical values
+            const finalLayout = {
+                ...baseLayout,
+                cardHeight: cardHeight * scale,
+                gap: baseLayout.gap * scale,
+                mainTitleFontSize: baseLayout.mainTitleFontSize * scale,
+                yearTitleFontSize: baseLayout.yearTitleFontSize * scale,
+                mainTitleGap: baseLayout.mainTitleGap * scale,
+                yearTitleGap: baseLayout.yearTitleGap * scale,
+                groupEndGap: baseLayout.groupEndGap * scale,
+            };
+
+            // Set canvas size and draw background
+            canvas.width = baseLayout.canvasWidth;
+            canvas.height = baseLayout.canvasHeight;
+            ctx.fillStyle = '#111827'; // bg-gray-900
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 4. Vertically center the entire block and draw it
+            const finalContentHeight = idealContentHeight * scale;
+            let currentY = baseLayout.padding;
+            if (finalContentHeight < availableHeight) {
+                currentY += (availableHeight - finalContentHeight) / 2;
+            }
+
+            // 5. Draw main title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${finalLayout.mainTitleFontSize}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('My Selections', canvas.width / 2, currentY);
+            currentY += finalLayout.mainTitleGap;
+
+            // 6. Draw the groups of cards using the final scaled layout
+            data.forEach(group => {
+                ctx.fillStyle = '#93c5fd';
+                ctx.font = `bold ${finalLayout.yearTitleFontSize}px Inter, sans-serif`;
+                ctx.textAlign = 'left';
+                ctx.fillText(group.year, finalLayout.padding, currentY);
+                currentY += finalLayout.yearTitleGap;
+
+                group.items.forEach((item, index) => {
+                    const isSelected = selectedItems.has(item.id);
+                    const col = index % columns;
+                    const row = Math.floor(index / columns);
+                    
+                    const cardX = baseLayout.padding + col * (cardWidth + baseLayout.gap);
+                    const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
+
+                    ctx.fillStyle = isSelected ? '#1D4ED8' : '#374151';
+                    drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 12 * scale);
+                    ctx.fill();
+
+                    ctx.strokeStyle = isSelected ? '#3B82F6' : '#4b5563';
+                    ctx.lineWidth = 3 * scale;
+                    ctx.stroke();
+
+                    // --- DYNAMIC FONT SIZE LOGIC ---
+                    const maxFontSize = finalLayout.cardHeight * 0.4;
+                    const minFontSize = 8 * scale;
+                    const optimalFontSize = calculateOptimalFontSize(ctx, item.title, cardWidth, finalLayout.cardHeight, maxFontSize, minFontSize);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    drawWrappedText(ctx, item.title, cardX, cardY, cardWidth, finalLayout.cardHeight, optimalFontSize);
+                });
+                
+                const rowsInGroup = Math.ceil(group.items.length / columns);
+                currentY += rowsInGroup * (finalLayout.cardHeight + finalLayout.gap) + finalLayout.groupEndGap;
+            });
+
+            // 7. Generate and download the image
+            try {
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'my-selections-story.png';
+                link.href = dataUrl;
+                link.click();
+            } catch (error) {
+                 console.error('Oops, something went wrong with canvas!', error);
+                alert('Could not generate image. See console for details.');
+            } finally {
+                downloadBtn.textContent = statusOriginalText;
+                downloadBtn.disabled = false;
+            }
+        }
+
+
+        function copyListToClipboard() {
+             if (selectedItems.size === 0) {
+                alert("Please select at least one item to copy!");
+                return;
+            }
+
+            let textToCopy = "My Selections:\n";
+            selectedItems.forEach(id => {
+                 data.forEach(group => {
+                    const foundItem = group.items.find(item => item.id === id);
+                    if (foundItem) {
+                        textToCopy += `- ${foundItem.title} (${group.year})\n`;
+                    }
+                });
+            });
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert("Could not copy text to clipboard.");
+            });
+        }
+
+        downloadBtn.addEventListener('click', generateImageWithCanvas);
+        copyBtn.addEventListener('click', copyListToClipboard);
+
+        renderItems();
+
+    </script>
+</body>
+</html>
