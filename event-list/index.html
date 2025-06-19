@@ -105,6 +105,10 @@
                         <label for="event-location" class="block text-sm font-medium text-gray-300">Location</label>
                         <input type="text" id="event-location" name="event-location" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                     </div>
+                     <div>
+                        <label for="event-social" class="block text-sm font-medium text-gray-300">Social Media Handle</label>
+                        <input type="text" id="event-social" name="event-social" placeholder="@username" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                    </div>
                     <div>
                         <label for="event-price" class="block text-sm font-medium text-gray-300">Ticket Price (IDR)</label>
                         <div class="flex items-center space-x-4 mt-1">
@@ -115,6 +119,11 @@
                             </div>
                         </div>
                     </div>
+                    <div>
+                        <label for="event-image" class="block text-sm font-medium text-gray-300">Event Background Image</label>
+                        <input type="file" id="event-image" name="event-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700">
+                    </div>
+
                     <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md">
                         Add Event to List
                     </button>
@@ -186,6 +195,8 @@
         const eventNameInput = document.getElementById('event-name');
         const eventDateInput = document.getElementById('event-date');
         const eventLocationInput = document.getElementById('event-location');
+        const eventSocialInput = document.getElementById('event-social');
+        const eventImageInput = document.getElementById('event-image');
         const eventPriceInput = document.getElementById('event-price');
         const isFreeCheckbox = document.getElementById('is-free');
         const previewListContainer = document.querySelector('#poster-content .event-list-container');
@@ -237,13 +248,17 @@
         
         const createEventElement = (event, index, showActionButtons) => {
             const eventElement = document.createElement('div');
-            // Glassmorphism effect for the card
-            eventElement.className = 'event-item relative p-8 bg-white/10 backdrop-blur-lg rounded-3xl shadow-lg border border-white/20';
+            // Add overflow-hidden and position relative for background
+            eventElement.className = 'event-item relative p-8 bg-white/10 backdrop-blur-lg rounded-3xl shadow-lg border border-white/20 overflow-hidden';
             const priceColor = event.isFree ? 'text-green-400' : 'text-cyan-400';
-            
+
+            const backgroundImageHtml = event.backgroundImage
+                ? `<div class="absolute inset-0 bg-cover bg-center z-0" style="background-image: url('${event.backgroundImage}'); filter: blur(4px) brightness(0.7); transform: scale(1.1);"></div>`
+                : '';
+
             const actionButtonsHtml = showActionButtons 
                 ? `
-                <div class="action-buttons absolute top-4 right-4 flex flex-col gap-2">
+                <div class="action-buttons absolute top-4 right-4 flex flex-col gap-2 z-20">
                     <button data-action="move-up" data-index="${index}" title="Move Up" class="text-gray-400 hover:text-white transition-colors" ${index === 0 ? 'disabled' : ''}>
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
                     </button>
@@ -256,22 +271,35 @@
                 </div>
                 `
                 : '';
-
-            // Using flexbox for better layout and alignment
-            eventElement.innerHTML = `
-                ${actionButtonsHtml}
-                <div class="flex justify-between items-start gap-4">
-                    <h3 class="text-5xl font-bold text-white pr-24">${event.name}</h3>
-                    <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0">${event.priceText}</p>
+            
+            const socialMediaHtml = event.socialMedia 
+                ? `
+                <div class="flex items-center gap-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <span>${event.socialMedia}</span>
                 </div>
-                <div class="mt-6 space-y-5 text-3xl text-gray-300">
-                    <div class="flex items-center gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span>${event.date}</span>
+                `
+                : '';
+
+            // Content is wrapped in a div with relative positioning to sit above the background
+            eventElement.innerHTML = `
+                ${backgroundImageHtml}
+                <div class="relative z-10">
+                    ${actionButtonsHtml}
+                    <div class="flex justify-between items-start gap-4">
+                        <h3 class="text-5xl font-bold text-white pr-24">${event.name}</h3>
+                        <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0">${event.priceText}</p>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <span>${event.location}</span>
+                    <div class="mt-6 space-y-5 text-3xl text-gray-300">
+                        <div class="flex items-center gap-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span>${event.date}</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <span>${event.location}</span>
+                        </div>
+                        ${socialMediaHtml}
                     </div>
                 </div>
             `;
@@ -293,7 +321,13 @@
         const loadEvents = () => {
             const storedEvents = localStorage.getItem('eventPosterEvents');
             if (storedEvents) {
-                events = JSON.parse(storedEvents);
+                try {
+                    events = JSON.parse(storedEvents);
+                } catch(e) {
+                    console.error("Could not parse events from localStorage", e);
+                    localStorage.removeItem('eventPosterEvents'); // Clear corrupted data
+                    events = [];
+                }
             }
             renderEventsInPreview();
         };
@@ -302,10 +336,40 @@
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
         }
 
-        function addEvent(e) {
+        // Convert file to Base64 data URL
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+        });
+
+        async function addEvent(e) {
             e.preventDefault();
+            
+            let backgroundImage = null;
+            const file = eventImageInput.files[0];
+            if (file) {
+                try {
+                    backgroundImage = await toBase64(file);
+                } catch (error) {
+                    console.error("Error reading file:", error);
+                    showAlert("Image Error", "Could not read the selected image file.");
+                    return;
+                }
+            }
+
             const priceValue = parseFloat(eventPriceInput.value);
-            const newEvent = { name: eventNameInput.value, date: eventDateInput.value, location: eventLocationInput.value, priceText: isFreeCheckbox.checked ? 'Free' : (isNaN(priceValue) ? 'Price not set' : formatPrice(priceValue)), isFree: isFreeCheckbox.checked };
+            const newEvent = {
+                name: eventNameInput.value,
+                date: eventDateInput.value,
+                location: eventLocationInput.value,
+                socialMedia: eventSocialInput.value,
+                backgroundImage: backgroundImage,
+                priceText: isFreeCheckbox.checked ? 'Free' : (isNaN(priceValue) ? 'Price not set' : formatPrice(priceValue)),
+                isFree: isFreeCheckbox.checked
+            };
+
             events.push(newEvent);
             saveEvents();
             renderEventsInPreview();
