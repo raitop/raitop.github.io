@@ -142,6 +142,10 @@
                         <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
                         <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
                     </div>
+                     <div class="flex items-center">
+                        <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                        <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
+                    </div>
                 </div>
 
                 <h2 class="text-2xl font-bold mt-8 mb-4 border-b border-gray-700 pb-2">Event Details</h2>
@@ -224,6 +228,7 @@
                             <div class="mt-auto pt-4">
                                 <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
                                 <footer id="preview-footer" class="text-center text-gray-500 text-2xl"></footer>
+                                <p id="preview-url" class="text-center text-gray-600 text-lg mt-1"></p>
                             </div>
                         </div>
                     </div>
@@ -261,6 +266,7 @@
         const posterFooterInput = document.getElementById('poster-footer');
         const eventsPerPageInput = document.getElementById('events-per-page');
         const showTimestampCheckbox = document.getElementById('show-timestamp');
+        const showUrlCheckbox = document.getElementById('show-url');
         const titleFontSizeSlider = document.getElementById('title-font-size');
         const customGradientControls = document.getElementById('custom-gradient-controls');
         const gradientStartColorInput = document.getElementById('gradient-start-color');
@@ -278,6 +284,7 @@
         const previewListContainer = document.querySelector('#poster-content .event-list-container');
         const previewTimestamp = document.getElementById('preview-timestamp');
         const previewFooter = document.getElementById('preview-footer');
+        const previewUrl = document.getElementById('preview-url');
 
         // --- MODAL DOM REFERENCES ---
         const modal = document.getElementById('custom-modal');
@@ -294,6 +301,7 @@
             footer: 'Generated with Event Poster Maker',
             eventsPerPage: 9,
             showTimestamp: false,
+            showUrl: false,
             titleFontSize: 'text-9xl',
             customGradient: { start: '#1f2937', end: '#111827' }
         };
@@ -435,6 +443,7 @@
             posterFooterInput.value = settings.footer;
             eventsPerPageInput.value = settings.eventsPerPage;
             showTimestampCheckbox.checked = settings.showTimestamp;
+            showUrlCheckbox.checked = settings.showUrl;
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
             
@@ -459,6 +468,7 @@
             
             previewFooter.textContent = settings.footer;
             previewTimestamp.style.display = 'none';
+            previewUrl.style.display = 'none';
         };
 
         // --- EVENT HANDLERS & LOGIC ---
@@ -610,6 +620,15 @@
                 } else {
                     timestampEl.style.display = 'none';
                 }
+                
+                const urlEl = posterClone.querySelector('#preview-url');
+                if (settings.showUrl) {
+                    urlEl.textContent = window.location.href;
+                    urlEl.style.display = 'block';
+                } else {
+                    urlEl.style.display = 'none';
+                }
+
                 posterClone.querySelector('#preview-footer').textContent = settings.footer;
 
 
@@ -673,6 +692,7 @@
         posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; saveState(); renderCustomizations(); });
         eventsPerPageInput.addEventListener('change', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
         showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); renderCustomizations(); });
+        showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
         titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = fontSizeMap[e.target.value]; saveState(); renderCustomizations(); });
         gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; saveState(); renderCustomizations();});
         gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; saveState(); renderCustomizations();});
