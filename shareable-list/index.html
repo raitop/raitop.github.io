@@ -17,20 +17,27 @@
         /* A few custom styles to make things pop */
         body {
             font-family: 'Inter', sans-serif;
+            /* UI/UX Improvement #1: Add a subtle background gradient */
             background-color: #111827; /* gray-900 */
+            background-image: radial-gradient(circle at top, #1f2937, #111827 80%);
         }
         .item-card {
-            transition: all 0.2s ease-in-out;
+            /* UI/UX Improvement #3: Enhance card animations */
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                        background-color 0.25s ease, 
+                        border-color 0.25s ease;
             border: 2px solid #374151; /* gray-700 */
+            will-change: transform; /* Hint to the browser for smoother animation */
         }
         .item-card.selected {
             background-color: #1D4ED8; /* blue-700 */
             border-color: #3B82F6; /* blue-500 */
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transform: translateY(-4px) scale(1.03); /* More pronounced pop effect */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .item-card:hover {
+        .item-card:hover:not(.selected) {
             border-color: #6B7280; /* gray-500 */
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -45,11 +52,9 @@
 
         <!-- Action Buttons -->
         <div class="flex justify-center items-center gap-4 mb-10">
-            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
-                Download Image
-            </button>
-            <button id="copy-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
-                Copy List to Clipboard
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                <span>Download Image</span>
             </button>
         </div>
 
@@ -59,7 +64,14 @@
         </main>
         
         <footer class="text-center text-gray-500 mt-12 pb-4">
-            <p>Download the image and share it on your social media stories!</p>
+            <div class="flex flex-col items-center gap-4">
+                <!-- UI/UX Improvement #4: Add an icon to the footer button -->
+                <button id="download-btn-footer" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>Download Image</span>
+                </button>
+                <p>Download the image and share it on your social media stories!</p>
+            </div>
         </footer>
     </div>
 
@@ -76,7 +88,7 @@
         const selectedItems = new Set();
         const itemGrid = document.getElementById('item-grid');
         const downloadBtn = document.getElementById('download-btn');
-        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtnFooter = document.getElementById('download-btn-footer');
         
         function renderItems() {
             itemGrid.innerHTML = '';
@@ -217,9 +229,13 @@
          * Prepares and generates an image showing ALL items as styled cards.
          */
         function generateImageWithCanvas() {
-            const statusOriginalText = downloadBtn.textContent;
-            downloadBtn.textContent = 'Generating...';
+            const originalBtnHTML = downloadBtn.innerHTML;
+            const loadingHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Generating...</span>`;
+            
+            downloadBtn.innerHTML = loadingHTML;
+            downloadBtnFooter.innerHTML = loadingHTML;
             downloadBtn.disabled = true;
+            downloadBtnFooter.disabled = true;
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -341,39 +357,17 @@
                  console.error('Oops, something went wrong with canvas!', error);
                 alert('Could not generate image. See console for details.');
             } finally {
+                downloadBtn.innerHTML = originalBtnHTML;
+                downloadBtnFooter.innerHTML = originalBtnHTML;
                 downloadBtn.disabled = false;
+                downloadBtnFooter.disabled = false;
             }
-        }
-
-
-        function copyListToClipboard() {
-             if (selectedItems.size === 0) {
-                alert("Please select at least one item to copy!");
-                return;
-            }
-
-            let textToCopy = "My Selections:\n";
-            selectedItems.forEach(id => {
-                 data.forEach(group => {
-                    const foundItem = group.items.find(item => item.id === id);
-                    if (foundItem) {
-                        textToCopy += `- ${foundItem.title} (${group.year})\n`;
-                    }
-                });
-            });
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert("Copied to clipboard!");
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                alert("Could not copy text to clipboard.");
-            });
         }
 
         // Initial render of all items when the page loads
         renderItems();
         downloadBtn.addEventListener('click', generateImageWithCanvas);
-        copyBtn.addEventListener('click', copyListToClipboard);
+        downloadBtnFooter.addEventListener('click', generateImageWithCanvas);
 
     </script>
 </body>
