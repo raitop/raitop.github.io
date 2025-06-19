@@ -128,14 +128,10 @@
         // --- APP LOGIC ---
         // ========================================================================
         
-        /**
-         * Initializes the application after Material Web Components are ready.
-         */
-        async function initializeApp() {
-            // FIX: Wait for the specific chip component we create in a loop to be defined.
-            // This is a more reliable way to prevent the race condition.
-            await customElements.whenDefined('md-filter-chip');
-
+        // FIX: Wrap the entire application logic in a DOMContentLoaded event listener.
+        // This ensures the HTML is fully parsed and the Material library has
+        // had a chance to register its components before our script tries to use them.
+        window.addEventListener('DOMContentLoaded', () => {
             const selectedItems = new Set();
             const itemGrid = document.getElementById('item-grid');
             const downloadBtn = document.getElementById('download-btn');
@@ -411,10 +407,7 @@
 
             // Initial render of all items
             renderItems();
-        }
-
-        // Start the application
-        initializeApp();
+        });
 
     </script>
 </body>
