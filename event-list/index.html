@@ -26,19 +26,19 @@
         }
 
         /* Styling for the scrollbar for better aesthetics and readability */
-        #event-list-container::-webkit-scrollbar {
+        .event-list-container::-webkit-scrollbar {
             width: 12px;
         }
-        #event-list-container::-webkit-scrollbar-track {
+        .event-list-container::-webkit-scrollbar-track {
             background: #e0e0e0;
             border-radius: 10px;
         }
-        #event-list-container::-webkit-scrollbar-thumb {
+        .event-list-container::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 10px;
             border: 3px solid #e0e0e0;
         }
-        #event-list-container::-webkit-scrollbar-thumb:hover {
+        .event-list-container::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
         /* Hide remove button during canvas generation */
@@ -112,9 +112,9 @@
             <div class="lg:w-2/3 flex-1 flex flex-col items-center">
                 <h2 class="text-2xl font-bold mb-4 text-center">Poster Preview</h2>
                 <!-- Container for the scaled preview -->
-                <div class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900">
-                    <!-- This div is scaled down, but its dimensions are increased to prevent squashing -->
-                    <div id="poster-preview" class="transform origin-top-left" style="transform: scale(calc(1/3)); width: 300%; height: 300%;">
+                <div class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900" style="aspect-ratio: 1080 / 1920;">
+                    <!-- This div is scaled down -->
+                    <div id="poster-preview" class="transform origin-top-left h-full w-full" style="transform: scale(calc(1080 / 1920 * 100% / 360px)); transform: scale(calc(1/3)); width: 300%; height: 300%;">
                         <!-- The actual poster content that will be rendered -->
                         <div id="poster-content" class="text-black p-16 flex flex-col">
                             <div class="pt-20"></div>
@@ -122,7 +122,8 @@
                                 <h1 class="text-8xl font-black tracking-tighter uppercase">Upcoming Events</h1>
                                 <p class="text-4xl text-gray-600 mt-2">Don't Miss Out!</p>
                             </header>
-                            <main id="event-list-container" class="flex-grow space-y-10 overflow-y-auto pr-4">
+                            <!-- Using class instead of ID for safer cloning -->
+                            <main class="event-list-container flex-grow space-y-10 overflow-y-auto pr-4">
                                 <!-- Events will be dynamically inserted here -->
                             </main>
                             <div class="pb-32"></div>
@@ -154,7 +155,7 @@
         const eventLocationInput = document.getElementById('event-location');
         const eventPriceInput = document.getElementById('event-price');
         const isFreeCheckbox = document.getElementById('is-free');
-        const eventListContainer = document.getElementById('event-list-container');
+        const previewListContainer = document.querySelector('#poster-content .event-list-container');
         const downloadBtn = document.getElementById('download-btn');
         const clearBtn = document.getElementById('clear-btn');
         const loadingIndicator = document.getElementById('loading-indicator');
@@ -188,4 +189,176 @@
             setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
             const hideModal = () => {
                 modal.firstElementChild.classList.add('scale-95');
-                setTimeout(() => modal.classList.add('hidden'), 30
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+            document.getElementById('modal-cancel').onclick = hideModal;
+            document.getElementById('modal-confirm').onclick = () => {
+                hideModal();
+                onConfirm();
+            };
+        }
+
+        const saveEvents = () => {
+            localStorage.setItem('eventPosterEvents', JSON.stringify(events));
+        };
+        
+        /**
+         * Creates an HTML element for a single event.
+         * @param {object} event - The event data object.
+         * @param {number} index - The index of the event in the array.
+         * @param {boolean} showRemoveButton - Whether to include the remove button.
+         * @returns {HTMLElement} - The created div element for the event.
+         */
+        const createEventElement = (event, index, showRemoveButton) => {
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event-item relative p-8 bg-white/60 backdrop-blur-sm rounded-3xl shadow-lg border border-gray-200 transition-all duration-300 ease-in-out';
+            const priceColor = event.isFree ? 'text-green-600' : 'text-blue-600';
+            
+            const removeBtnHtml = showRemoveButton 
+                ? `<button class="remove-btn absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors" data-index="${index}" title="Remove Event"><svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>`
+                : '';
+
+            eventElement.innerHTML = `
+                ${removeBtnHtml}
+                <h3 class="text-5xl font-bold text-gray-900 pr-8">${event.name}</h3>
+                <p class="text-4xl text-indigo-600 font-semibold mt-2">${event.date}</p>
+                <p class="text-3xl text-gray-700 mt-4">📍 ${event.location}</p>
+                <p class="text-4xl font-bold ${priceColor} mt-4">${event.priceText}</p>
+            `;
+            return eventElement;
+        };
+
+        const renderEventsInPreview = () => {
+            previewListContainer.innerHTML = '';
+            if (events.length === 0) {
+                previewListContainer.innerHTML = `<div class="p-8 bg-white/50 backdrop-blur-sm rounded-3xl shadow-lg border border-gray-200 text-center"><h3 class="text-4xl font-bold text-gray-500">No events yet.</h3><p class="text-3xl text-gray-400 mt-2">Use the form to add one!</p></div>`;
+                return;
+            }
+            events.forEach((event, index) => {
+                const eventElement = createEventElement(event, index, true); // Show remove button in preview
+                previewListContainer.appendChild(eventElement);
+            });
+        };
+
+        const loadEvents = () => {
+            const storedEvents = localStorage.getItem('eventPosterEvents');
+            if (storedEvents) {
+                events = JSON.parse(storedEvents);
+            }
+            renderEventsInPreview();
+        };
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
+        }
+
+        function addEvent(e) {
+            e.preventDefault();
+            const priceValue = parseFloat(eventPriceInput.value);
+            const newEvent = { name: eventNameInput.value, date: eventDateInput.value, location: eventLocationInput.value, priceText: isFreeCheckbox.checked ? 'Free' : (isNaN(priceValue) ? 'Price not set' : formatPrice(priceValue)), isFree: isFreeCheckbox.checked };
+            events.push(newEvent);
+            saveEvents();
+            renderEventsInPreview();
+            eventForm.reset();
+            togglePriceInput();
+        }
+
+        function handleListClick(e) {
+            const removeButton = e.target.closest('.remove-btn');
+            if (!removeButton) return;
+            const index = removeButton.dataset.index;
+            events.splice(index, 1);
+            saveEvents();
+            renderEventsInPreview();
+        }
+        
+        function clearAllEvents() {
+            if (events.length === 0) return;
+            showConfirm('Clear All Events', 'Are you sure you want to delete all events? This action cannot be undone.', () => {
+                events = [];
+                saveEvents();
+                renderEventsInPreview();
+            });
+        }
+
+        function togglePriceInput() {
+            eventPriceInput.disabled = isFreeCheckbox.checked;
+            if (isFreeCheckbox.checked) {
+                eventPriceInput.value = '';
+                eventPriceInput.classList.add('bg-gray-500');
+            } else {
+                eventPriceInput.classList.remove('bg-gray-500');
+            }
+        }
+        
+        async function downloadImage() {
+            if (events.length === 0) {
+                showAlert('Cannot Download', "Please add at least one event before downloading.");
+                return;
+            }
+            loadingIndicator.classList.remove('hidden');
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const originalPosterContent = document.getElementById('poster-content');
+            const posterClone = originalPosterContent.cloneNode(true);
+            
+            // --- This is the critical new logic ---
+            // Find the list container *inside the clone* and rebuild it cleanly.
+            const listInClone = posterClone.querySelector('.event-list-container');
+            listInClone.innerHTML = ''; // Clear any cloned children
+            events.forEach((event, index) => {
+                // Create elements WITHOUT the remove button for a clean image
+                const eventElement = createEventElement(event, index, false);
+                listInClone.appendChild(eventElement);
+            });
+            // --- End of new logic ---
+
+            posterClone.style.position = 'absolute';
+            posterClone.style.top = '-9999px';
+            posterClone.style.left = '0px';
+            posterClone.style.zIndex = '-100';
+            document.body.appendChild(posterClone);
+            
+            try {
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const canvas = await html2canvas(posterClone, {
+                    scale: 1, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#f0f2f5',
+                    width: 1080,
+                    height: 1920,
+                    windowWidth: 1080,
+                    windowHeight: 1920
+                });
+
+                const link = document.createElement('a');
+                link.download = 'event-poster.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                link.remove();
+            } catch (err) {
+                console.error('Oops, something went wrong!', err);
+                showAlert('Image Generation Failed', 'An error occurred while creating the image. Please try again.');
+            } finally {
+                document.body.removeChild(posterClone);
+                loadingIndicator.classList.add('hidden');
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', loadEvents);
+        eventForm.addEventListener('submit', addEvent);
+        isFreeCheckbox.addEventListener('change', togglePriceInput);
+        downloadBtn.addEventListener('click', downloadImage);
+        clearBtn.addEventListener('click', clearAllEvents);
+        previewListContainer.addEventListener('click', handleListClick);
+
+    </script>
+</body>
+</html>
