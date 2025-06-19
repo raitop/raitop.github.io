@@ -3,61 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Selection Generator</title>
-    
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts for a nicer look -->
+    <title>My Selection Generator (Material 3)</title>
+
+    <!-- Google Fonts: Roboto and Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Material Web Components (M3) -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web/all.js?module"></script>
 
     <style>
-        /* A few custom styles to make things pop */
+        /* Base styles and M3 Dark Theme */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', sans-serif;
+            background-color: #121316; /* M3 Dark Surface */
+            color: #E3E3E6; /* M3 Dark on Surface */
+            margin: 0;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
         }
-        .item-card {
-            transition: all 0.2s ease-in-out;
-            border: 2px solid #374151; /* gray-700 */
+
+        .container {
+            max-width: 90rem;
+            width: 100%;
         }
-        .item-card.selected {
-            background-color: #1D4ED8; /* blue-700 */
-            border-color: #3B82F6; /* blue-500 */
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+
+        header {
+            text-align: center;
+            padding: 2rem 0;
         }
-        .item-card:hover {
-            border-color: #6B7280; /* gray-500 */
+        
+        h1 {
+            font-size: 3.5rem; /* M3 display-small */
+            font-weight: 700;
+            margin: 0;
+            color: #E3E3E6;
+        }
+
+        h2 {
+            font-size: 1.75rem; /* M3 headline-medium */
+            font-weight: 500;
+            color: #C7C6CA;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #44474B;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #C7C6CA;
+            margin-top: 0.5rem;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Style for the selection chips */
+        md-chip-set {
+            --md-sys-color-surface-container-lowest: #0D0E11;
+            padding-top: 1rem;
+        }
+        
+        md-filter-chip {
+             --md-filter-chip-unselected-label-text-color: #E3E3E6;
+             --md-filter-chip-unselected-container-color: #35383D;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        footer {
+             text-align: center;
+             color: #8E9094;
+             margin-top: 4rem;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-4 sm:p-8">
+<body>
 
-    <div class="max-w-7xl mx-auto">
+    <div class="container">
         <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-bold text-white">Selection Generator</h1>
-            <p class="text-lg text-gray-400 mt-2">Click items to select them, then export your list as an image.</p>
+        <header>
+            <h1>Selection Generator</h1>
+            <p class="subtitle">Click items to select them, then export your list as an image.</p>
         </header>
 
         <!-- Action Buttons -->
-        <div class="flex justify-center items-center gap-4 mb-10">
-            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+        <div class="actions">
+            <md-filled-button id="download-btn">
                 Download Image
-            </button>
-            <button id="copy-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                <span slot="icon" class="material-symbols-outlined">download</span>
+            </md-filled-button>
+            <md-outlined-button id="copy-btn">
                 Copy List to Clipboard
-            </button>
+                <span slot="icon" class="material-symbols-outlined">content_copy</span>
+            </md-outlined-button>
         </div>
 
         <!-- This is where the grid of items will be rendered by JavaScript -->
-        <main id="item-grid" class="space-y-10">
+        <main id="item-grid">
             <!-- Content will be generated here -->
         </main>
         
-        <footer class="text-center text-gray-500 mt-12 pb-4">
+        <footer>
             <p>Download the image and share it on your social media stories!</p>
         </footer>
     </div>
@@ -82,42 +140,40 @@
             data.forEach(group => {
                 const groupContainer = document.createElement('div');
                 const groupTitle = document.createElement('h2');
-                groupTitle.className = 'text-2xl font-bold border-b-2 border-gray-700 pb-2 mb-4';
                 groupTitle.textContent = group.year;
                 groupContainer.appendChild(groupTitle);
                 
-                const itemsContainer = document.createElement('div');
-                itemsContainer.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+                const chipSet = document.createElement('md-chip-set');
 
                 group.items.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'item-card bg-gray-800 p-3 rounded-lg cursor-pointer flex items-center justify-center text-center';
-                    card.textContent = item.title;
-                    card.dataset.id = item.id;
+                    const chip = document.createElement('md-filter-chip');
+                    chip.label = item.title;
+                    chip.dataset.id = item.id;
 
                     if (selectedItems.has(item.id)) {
-                        card.classList.add('selected');
+                        chip.selected = true;
                     }
 
-                    card.addEventListener('click', () => {
-                        handleItemClick(item.id);
+                    chip.addEventListener('click', () => {
+                        handleItemClick(item.id, chip);
                     });
                     
-                    itemsContainer.appendChild(card);
+                    chipSet.appendChild(chip);
                 });
 
-                groupContainer.appendChild(itemsContainer);
+                groupContainer.appendChild(chipSet);
                 itemGrid.appendChild(groupContainer);
             });
         }
 
-        function handleItemClick(id) {
-            if (selectedItems.has(id)) {
-                selectedItems.delete(id);
-            } else {
+        function handleItemClick(id, chip) {
+            // The 'selected' property on the chip updates automatically on click.
+            // We just need to sync our Set with the chip's state.
+            if (chip.selected) {
                 selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
             }
-            renderItems();
         }
         
         // --- Canvas Helper Functions ---
@@ -145,11 +201,11 @@
         function calculateOptimalFontSize(ctx, text, width, height, maxFontSize, minFontSize) {
             const lineHeightRatio = 1.2;
             for (let fontSize = maxFontSize; fontSize >= minFontSize; fontSize--) {
-                ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+                ctx.font = `500 ${fontSize}px Roboto, sans-serif`; // Material uses 500 weight for labels
                 const words = text.split(' ');
                 let line = '';
                 const lines = [];
-                const maxWidth = width - 20; // horizontal padding within card
+                const maxWidth = width - 32; // horizontal padding within card
 
                 for (let n = 0; n < words.length; n++) {
                     const testLine = line + words[n] + ' ';
@@ -164,7 +220,7 @@
 
                 const totalTextHeight = lines.length * (fontSize * lineHeightRatio);
 
-                if (totalTextHeight <= height - 10) { // vertical padding within card
+                if (totalTextHeight <= height - 16) { // vertical padding within card
                     return fontSize;
                 }
             }
@@ -175,17 +231,15 @@
          * Draws multi-line, centered text inside a rectangle with a calculated font size.
          */
         function drawWrappedText(ctx, text, x, y, cardWidth, cardHeight, fontSize) {
-            // Set baseline to middle for easier vertical centering
             ctx.textBaseline = 'middle';
-            
             const lineHeightRatio = 1.2;
             const lineHeight = fontSize * lineHeightRatio;
-            ctx.font = `bold ${fontSize}px Inter, sans-serif`;
+            ctx.font = `500 ${fontSize}px Roboto, sans-serif`;
 
             const words = text.split(' ');
             let line = '';
             const lines = [];
-            const maxWidth = cardWidth - 20;
+            const maxWidth = cardWidth - 32;
 
             for(let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + ' ';
@@ -201,14 +255,12 @@
             lines.push(line);
 
             const totalTextHeight = lines.length * lineHeight;
-            // Calculate the Y coordinate for the center of the first line of text.
             const firstLineY = y + (cardHeight / 2) - (totalTextHeight / 2) + (lineHeight / 2);
 
             lines.forEach((l, index) => {
                 ctx.fillText(l.trim(), x + cardWidth / 2, firstLineY + (index * lineHeight));
             });
             
-            // Reset baseline for other drawing operations
             ctx.textBaseline = 'alphabetic';
         }
 
@@ -216,14 +268,21 @@
          * Prepares and generates an image showing ALL items as styled cards.
          */
         function generateImageWithCanvas() {
-            const statusOriginalText = downloadBtn.textContent;
-            downloadBtn.textContent = 'Generating...';
             downloadBtn.disabled = true;
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Layout configuration for social media (1080x1920)
+            // Material Design 3 Dark Theme Colors
+            const M3_COLORS = {
+                surface: '#121316',
+                onSurface: '#E3E3E6',
+                onSurfaceVariant: '#C7C6CA',
+                primaryContainer: '#004C69',
+                onPrimaryContainer: '#C4E7FF',
+                surfaceContainerHighest: '#333538',
+            };
+            
             const baseLayout = {
                 canvasWidth: 1080,
                 canvasHeight: 1920,
@@ -242,7 +301,6 @@
             const cardWidth = Math.floor((contentWidth - (columns - 1) * baseLayout.gap) / columns);
             const cardHeight = Math.floor(cardWidth * 0.5);
             
-            // 1. Calculate the total height the content would occupy with ideal settings
             let idealContentHeight = baseLayout.mainTitleGap;
             data.forEach(group => {
                 idealContentHeight += baseLayout.yearTitleGap;
@@ -252,14 +310,12 @@
             });
             idealContentHeight -= baseLayout.groupEndGap;
 
-            // 2. Determine the scaling factor if content overflows
             let scale = 1.0;
             const availableHeight = baseLayout.canvasHeight - (baseLayout.padding * 2);
             if (idealContentHeight > availableHeight) {
                 scale = availableHeight / idealContentHeight;
             }
             
-            // 3. Create a final layout object with scaled vertical values
             const finalLayout = {
                 ...baseLayout,
                 cardHeight: cardHeight * scale,
@@ -271,30 +327,26 @@
                 groupEndGap: baseLayout.groupEndGap * scale,
             };
 
-            // Set canvas size and draw background
             canvas.width = baseLayout.canvasWidth;
             canvas.height = baseLayout.canvasHeight;
-            ctx.fillStyle = '#111827'; // bg-gray-900
+            ctx.fillStyle = M3_COLORS.surface;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 4. Vertically center the entire block and draw it
             const finalContentHeight = idealContentHeight * scale;
             let currentY = baseLayout.padding;
             if (finalContentHeight < availableHeight) {
                 currentY += (availableHeight - finalContentHeight) / 2;
             }
 
-            // 5. Draw main title
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `bold ${finalLayout.mainTitleFontSize}px Inter, sans-serif`;
+            ctx.fillStyle = M3_COLORS.onSurface;
+            ctx.font = `700 ${finalLayout.mainTitleFontSize}px Roboto, sans-serif`;
             ctx.textAlign = 'center';
             ctx.fillText('My Selections', canvas.width / 2, currentY);
             currentY += finalLayout.mainTitleGap;
 
-            // 6. Draw the groups of cards using the final scaled layout
             data.forEach(group => {
-                ctx.fillStyle = '#93c5fd';
-                ctx.font = `bold ${finalLayout.yearTitleFontSize}px Inter, sans-serif`;
+                ctx.fillStyle = M3_COLORS.onSurfaceVariant;
+                ctx.font = `500 ${finalLayout.yearTitleFontSize}px Roboto, sans-serif`;
                 ctx.textAlign = 'left';
                 ctx.fillText(group.year, finalLayout.padding, currentY);
                 currentY += finalLayout.yearTitleGap;
@@ -307,20 +359,15 @@
                     const cardX = baseLayout.padding + col * (cardWidth + baseLayout.gap);
                     const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
 
-                    ctx.fillStyle = isSelected ? '#1D4ED8' : '#374151';
-                    drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 12 * scale);
+                    ctx.fillStyle = isSelected ? M3_COLORS.primaryContainer : M3_COLORS.surfaceContainerHighest;
+                    drawRoundRect(ctx, cardX, cardY, cardWidth, finalLayout.cardHeight, 16 * scale);
                     ctx.fill();
 
-                    ctx.strokeStyle = isSelected ? '#3B82F6' : '#4b5563';
-                    ctx.lineWidth = 3 * scale;
-                    ctx.stroke();
-
-                    // --- DYNAMIC FONT SIZE LOGIC ---
-                    const maxFontSize = finalLayout.cardHeight * 0.4;
-                    const minFontSize = 8 * scale;
+                    const maxFontSize = finalLayout.cardHeight * 0.35;
+                    const minFontSize = 9 * scale;
                     const optimalFontSize = calculateOptimalFontSize(ctx, item.title, cardWidth, finalLayout.cardHeight, maxFontSize, minFontSize);
 
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillStyle = isSelected ? M3_COLORS.onPrimaryContainer : M3_COLORS.onSurfaceVariant;
                     ctx.textAlign = 'center';
                     drawWrappedText(ctx, item.title, cardX, cardY, cardWidth, finalLayout.cardHeight, optimalFontSize);
                 });
@@ -329,7 +376,6 @@
                 currentY += rowsInGroup * (finalLayout.cardHeight + finalLayout.gap) + finalLayout.groupEndGap;
             });
 
-            // 7. Generate and download the image
             try {
                 const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
@@ -340,7 +386,6 @@
                  console.error('Oops, something went wrong with canvas!', error);
                 alert('Could not generate image. See console for details.');
             } finally {
-                downloadBtn.textContent = statusOriginalText;
                 downloadBtn.disabled = false;
             }
         }
@@ -363,11 +408,7 @@
             });
             
             navigator.clipboard.writeText(textToCopy).then(() => {
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                }, 2000);
+                alert("Copied to clipboard!");
             }).catch(err => {
                 console.error('Failed to copy text: ', err);
                 alert("Could not copy text to clipboard.");
