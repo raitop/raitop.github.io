@@ -130,6 +130,18 @@
 
         </div>
     </div>
+    
+    <!-- Custom Modal -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex justify-center items-center p-4 transition-opacity duration-300">
+        <div class="bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md text-center transform scale-95 transition-transform duration-300">
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Modal Title</h3>
+            <p id="modal-message" class="text-gray-300 mb-6">Modal message goes here.</p>
+            <div id="modal-buttons" class="flex justify-end space-x-4">
+                <!-- Buttons will be injected here by JS -->
+            </div>
+        </div>
+    </div>
+
 
     <script>
         // DOM element references
@@ -143,9 +155,63 @@
         const downloadBtn = document.getElementById('download-btn');
         const clearBtn = document.getElementById('clear-btn');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalButtons = document.getElementById('modal-buttons');
 
         // The "source of truth" for our event list.
         let events = [];
+
+        /**
+         * Shows a custom alert modal.
+         * @param {string} title - The title for the modal.
+         * @param {string} message - The message to display.
+         */
+        function showAlert(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalButtons.innerHTML = `<button id="modal-ok" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500">OK</button>`;
+            modal.classList.remove('hidden');
+            
+            // Animate entrance
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+
+            document.getElementById('modal-ok').onclick = () => {
+                 modal.firstElementChild.classList.add('scale-95');
+                 setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+        }
+
+        /**
+         * Shows a custom confirmation modal.
+         * @param {string} title - The title for the modal.
+         * @param {string} message - The confirmation question.
+         * @param {function} onConfirm - The callback function to execute on confirmation.
+         */
+        function showConfirm(title, message, onConfirm) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalButtons.innerHTML = `
+                <button id="modal-cancel" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gray-500">Cancel</button>
+                <button id="modal-confirm" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500">Confirm</button>
+            `;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
+
+
+            const hideModal = () => {
+                modal.firstElementChild.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+
+            document.getElementById('modal-cancel').onclick = hideModal;
+            document.getElementById('modal-confirm').onclick = () => {
+                hideModal();
+                onConfirm();
+            };
+        }
+
 
         /**
          * Saves the current list of events to the browser's localStorage.
@@ -161,26 +227,18 @@
             eventListContainer.innerHTML = ''; // Clear the list first
 
             if (events.length === 0) {
-                // Show a placeholder if no events are loaded/added.
-                eventListContainer.innerHTML = `
-                <div class="p-8 bg-white/50 backdrop-blur-sm rounded-3xl shadow-lg border border-gray-200 text-center">
-                    <h3 class="text-4xl font-bold text-gray-500">No events yet.</h3>
-                    <p class="text-3xl text-gray-400 mt-2">Use the form to add one!</p>
-                </div>`;
+                eventListContainer.innerHTML = `<div class="p-8 bg-white/50 backdrop-blur-sm rounded-3xl shadow-lg border border-gray-200 text-center"><h3 class="text-4xl font-bold text-gray-500">No events yet.</h3><p class="text-3xl text-gray-400 mt-2">Use the form to add one!</p></div>`;
                 return;
             }
 
             events.forEach((event, index) => {
                 const eventElement = document.createElement('div');
-                // Added `relative` positioning to anchor the remove button.
                 eventElement.className = 'event-item relative p-8 bg-white/60 backdrop-blur-sm rounded-3xl shadow-lg border border-gray-200 transition-all duration-300 ease-in-out';
                 const priceColor = event.isFree ? 'text-green-600' : 'text-blue-600';
 
                 eventElement.innerHTML = `
                     <button class="remove-btn absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors" data-index="${index}" title="Remove Event">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                     </button>
                     <h3 class="text-5xl font-bold text-gray-900 pr-8">${event.name}</h3>
                     <p class="text-4xl text-indigo-600 font-semibold mt-2">${event.date}</p>
@@ -206,12 +264,7 @@
          * Formats a number as IDR currency.
          */
         function formatPrice(price) {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(price);
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
         }
 
         /**
@@ -220,20 +273,10 @@
         function addEvent(e) {
             e.preventDefault();
             const priceValue = parseFloat(eventPriceInput.value);
-
-            // Create a new event object with all necessary data
-            const newEvent = {
-                name: eventNameInput.value,
-                date: eventDateInput.value,
-                location: eventLocationInput.value,
-                priceText: isFreeCheckbox.checked ? 'Free' : (isNaN(priceValue) ? 'Price not set' : formatPrice(priceValue)),
-                isFree: isFreeCheckbox.checked
-            };
-
-            events.push(newEvent); // Add to our array
-            saveEvents();         // Save to localStorage
-            renderEvents();       // Update the display
-
+            const newEvent = { name: eventNameInput.value, date: eventDateInput.value, location: eventLocationInput.value, priceText: isFreeCheckbox.checked ? 'Free' : (isNaN(priceValue) ? 'Price not set' : formatPrice(priceValue)), isFree: isFreeCheckbox.checked };
+            events.push(newEvent);
+            saveEvents();
+            renderEvents();
             eventForm.reset();
             togglePriceInput();
         }
@@ -244,9 +287,8 @@
         function handleListClick(e) {
             const removeButton = e.target.closest('.remove-btn');
             if (!removeButton) return;
-
             const index = removeButton.dataset.index;
-            events.splice(index, 1); // Remove the event from the array
+            events.splice(index, 1);
             saveEvents();
             renderEvents();
         }
@@ -255,14 +297,12 @@
          * Clears all events from the list and from localStorage.
          */
         function clearAllEvents() {
-            // A simple confirmation before deleting all data.
-            if (events.length > 0 && confirm('Are you sure you want to clear all events? This cannot be undone.')) {
+            if (events.length === 0) return;
+            showConfirm('Clear All Events', 'Are you sure you want to delete all events? This action cannot be undone.', () => {
                 events = [];
                 saveEvents();
                 renderEvents();
-            } else if (events.length === 0) {
-                // If list is already empty, do nothing.
-            }
+            });
         }
 
         /**
@@ -281,9 +321,9 @@
         /**
          * Generates and downloads the poster image using html2canvas.
          */
-        function downloadImage() {
+        async function downloadImage() {
             if (events.length === 0) {
-                alert("Please add at least one event before downloading.");
+                showAlert('Cannot Download', "Please add at least one event before downloading.");
                 return;
             }
             loadingIndicator.classList.remove('hidden');
@@ -292,24 +332,29 @@
 
             const posterContent = document.getElementById('poster-content');
             
-            html2canvas(posterContent, {
-                scale: 1, 
-                useCORS: true,
-                logging: false,
-                backgroundColor: null,
-            }).then(canvas => {
+            try {
+                // Wait for fonts to be properly loaded before capturing.
+                await document.fonts.ready;
+
+                const canvas = await html2canvas(posterContent, {
+                    scale: 1, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#f0f2f5', // Explicitly set background color
+                });
                 const link = document.createElement('a');
                 link.download = 'event-poster.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 link.remove();
-            }).catch(err => {
+            } catch (err) {
                 console.error('Oops, something went wrong!', err);
-            }).finally(() => {
+                showAlert('Image Generation Failed', 'An error occurred while creating the image. Please try again.');
+            } finally {
                 loadingIndicator.classList.add('hidden');
                 downloadBtn.disabled = false;
                 downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            });
+            }
         }
         
         // --- Event Listeners ---
