@@ -244,7 +244,9 @@
             const baseLayout = {
                 canvasWidth: 1080,
                 canvasHeight: 1920,
-                padding: 60,
+                sidePadding: 60,
+                topPadding: 200,    // Increased top padding
+                bottomPadding: 300, // Increased bottom padding for story UI and user text
                 gap: 25,
                 minCardWidth: 180,
                 mainTitleFontSize: 72,
@@ -254,7 +256,7 @@
                 groupEndGap: 50
             };
 
-            const contentWidth = baseLayout.canvasWidth - (baseLayout.padding * 2);
+            const contentWidth = baseLayout.canvasWidth - (baseLayout.sidePadding * 2);
             const columns = Math.floor((contentWidth + baseLayout.gap) / (baseLayout.minCardWidth + baseLayout.gap));
             const cardWidth = Math.floor((contentWidth - (columns - 1) * baseLayout.gap) / columns);
             const cardHeight = Math.floor(cardWidth * 0.5);
@@ -269,9 +271,9 @@
             });
             idealContentHeight -= baseLayout.groupEndGap;
 
-            // 2. Determine the scaling factor if content overflows
+            // 2. Determine the scaling factor if content overflows the designated content area
             let scale = 1.0;
-            const availableHeight = baseLayout.canvasHeight - (baseLayout.padding * 2);
+            const availableHeight = baseLayout.canvasHeight - baseLayout.topPadding - baseLayout.bottomPadding;
             if (idealContentHeight > availableHeight) {
                 scale = availableHeight / idealContentHeight;
             }
@@ -294,9 +296,9 @@
             ctx.fillStyle = '#111827'; // bg-gray-900
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 4. Vertically center the entire block and draw it
+            // 4. Vertically center the entire block within the available padded space
             const finalContentHeight = idealContentHeight * scale;
-            let currentY = baseLayout.padding;
+            let currentY = baseLayout.topPadding;
             if (finalContentHeight < availableHeight) {
                 currentY += (availableHeight - finalContentHeight) / 2;
             }
@@ -313,7 +315,7 @@
                 ctx.fillStyle = '#93c5fd';
                 ctx.font = `bold ${finalLayout.yearTitleFontSize}px Inter, sans-serif`;
                 ctx.textAlign = 'left';
-                ctx.fillText(group.year, finalLayout.padding, currentY);
+                ctx.fillText(group.year, finalLayout.sidePadding, currentY);
                 currentY += finalLayout.yearTitleGap;
 
                 group.items.forEach((item, index) => {
@@ -321,7 +323,7 @@
                     const col = index % columns;
                     const row = Math.floor(index / columns);
                     
-                    const cardX = baseLayout.padding + col * (cardWidth + baseLayout.gap);
+                    const cardX = baseLayout.sidePadding + col * (cardWidth + baseLayout.gap);
                     const cardY = currentY + row * (finalLayout.cardHeight + finalLayout.gap);
 
                     ctx.fillStyle = isSelected ? '#1D4ED8' : '#374151';
