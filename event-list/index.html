@@ -77,6 +77,16 @@
             opacity: 0.2;
             cursor: not-allowed;
         }
+        
+        /* Style for directly editable text on the canvas */
+        [contenteditable="true"] {
+            cursor: text;
+        }
+        [contenteditable="true"]:focus {
+            outline: 2px dashed rgba(139, 148, 162, 0.5); /* A soft outline for editing */
+            box-shadow: 0 0 15px rgba(139, 148, 162, 0.2);
+            border-radius: 8px;
+        }
 
     </style>
 </head>
@@ -145,8 +155,8 @@
                         <div id="poster-content" class="text-white flex flex-col p-24 relative overflow-hidden">
                             <div id="poster-background-overlay" class="absolute inset-0 z-0"></div>
                             <header class="text-center relative z-10">
-                                <h1 id="preview-title" class="font-black tracking-tighter uppercase"></h1>
-                                <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2"></p>
+                                <h1 id="preview-title" class="font-black tracking-tighter uppercase" contenteditable="true" data-setting="title"></h1>
+                                <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2" contenteditable="true" data-setting="subtitle"></p>
                             </header>
                             <!-- Using class instead of ID for safer cloning -->
                             <main class="event-list-container flex-grow overflow-y-auto py-12 -mx-4 px-4 relative z-10">
@@ -154,7 +164,7 @@
                             </main>
                             <div class="mt-auto pt-4 relative z-10">
                                 <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
-                                <footer id="preview-footer" class="text-center text-gray-500 text-2xl"></footer>
+                                <footer id="preview-footer" class="text-center text-gray-500 text-2xl" contenteditable="true" data-setting="footer"></footer>
                                 <p id="preview-url" class="text-center text-gray-600 text-lg mt-1"></p>
                             </div>
                         </div>
@@ -227,10 +237,6 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             <span>Sort by Date</span>
                         </button>
-                        <button id="populate-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" /></svg>
-                            <span>Populate with Test Data</span>
-                        </button>
                         <button id="export-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                             <span>Export Data</span>
@@ -298,7 +304,6 @@
         
         const downloadBtn = document.getElementById('download-btn');
         const clearBtn = document.getElementById('clear-btn');
-        const populateBtn = document.getElementById('populate-btn');
         const sortBtn = document.getElementById('sort-btn');
         const exportBtn = document.getElementById('export-btn');
         const importBtn = document.getElementById('import-btn');
@@ -484,6 +489,7 @@
         };
 
         const renderCustomizations = () => {
+            // Sync form inputs with settings object
             posterTitleInput.value = settings.title;
             posterSubtitleInput.value = settings.subtitle;
             posterBackgroundSelect.value = settings.background;
@@ -496,11 +502,11 @@
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
 
+            // Sync preview elements with settings object
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
             
-            // Background Image & Gradient Logic
             if(settings.background === 'custom') {
                 posterBackgroundOverlay.style.backgroundImage = `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`;
                 customGradientControls.classList.remove('hidden');
@@ -603,62 +609,19 @@
             }
         }
         
-        function populateWithTestData() {
-            const sampleNames = ["Cosmic Jam Fest", "Sunset Groove Party", "Tech Innovators Summit", "Indie Film Showcase", "Gourmet Food Fair", "Digital Art Expo", "Synthwave Night", "Startup Pitch Battle", "Urban Garden Workshop", "Acoustic Lakeside Sessions"];
-            const sampleLocations = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta", "Bali", "Medan", "Semarang", "Makassar"];
-            const sampleSocials = ["@cosmicfest", "@sunsetgroove", "@techsummit.id", "@indiecinema", "@foodiefair", "@digitalexpo", "@synthwave.night", "@startupbattle", "@urbangardeners", "@lakesidesound"];
-            
-            for (let i = 0; i < 10; i++) {
-                const isEventFree = Math.random() < 0.4;
-                const isTBA = !isEventFree && Math.random() < 0.2;
-                const randomDate = new Date(Date.now() + Math.random() * 31536000000); // Random date in the next year
-
-                let priceText;
-                if(isEventFree) {
-                    priceText = "Free";
-                } else if (isTBA) {
-                    priceText = "TBA";
-                } else {
-                    priceText = formatPrice(Math.floor(Math.random() * 450001) + 50000);
-                }
-
-                const newEvent = {
-                    name: sampleNames[Math.floor(Math.random() * sampleNames.length)],
-                    date: randomDate.toLocaleDateString('en-GB'),
-                    location: sampleLocations[Math.floor(Math.random() * sampleLocations.length)],
-                    socialMedia: sampleSocials[Math.floor(Math.random() * sampleSocials.length)],
-                    priceText: priceText,
-                    isFree: isEventFree
-                };
-                events.push(newEvent);
-            }
-            sortEvents();
-            saveState();
-            renderEventsInPreview();
-        }
-
         function exportData() {
-            // Check if there is anything to export
             if (events.length === 0) {
                  showAlert('Cannot Export', 'There are no events to export. Please add at least one event.');
                  return;
             }
-        
-            // Stringify the data with pretty-printing (2 spaces for indentation)
             const dataStr = JSON.stringify({ events, settings }, null, 2);
             const dataBlob = new Blob([dataStr], {type: "application/json"});
             const url = URL.createObjectURL(dataBlob);
-            
-            // Create a link element
             const link = document.createElement('a');
             link.download = `event-poster-data-${new Date().toISOString().slice(0,10)}.json`;
             link.href = url;
-            
-            // The link must be in the document to be clicked in some browsers
             document.body.appendChild(link);
             link.click();
-            
-            // Clean up by removing the link and revoking the object URL
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
@@ -687,10 +650,35 @@
                 }
             };
             reader.readAsText(file);
-            // Reset file input to allow re-importing same file
             importInput.value = '';
         }
         
+        // --- Direct Canvas Edit Handlers ---
+        const settingToInputMap = {
+            title: posterTitleInput,
+            subtitle: posterSubtitleInput,
+            footer: posterFooterInput
+        };
+
+        function handleDirectEdit(e) {
+            const element = e.target;
+            const key = element.dataset.setting;
+            const newValue = element.textContent;
+
+            if (key && settings[key] !== newValue) {
+                settings[key] = newValue;
+                settingToInputMap[key].value = newValue; // Sync input field
+                saveState();
+            }
+        }
+        
+        function preventLineBreaks(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur();
+            }
+        }
+
         async function downloadImage() {
             if (events.length === 0) {
                 showAlert('Cannot Download', "Please add at least one event before downloading.");
@@ -712,6 +700,9 @@
                 const chunk = events.slice(i * eventsPerPage, (i + 1) * eventsPerPage);
 
                 const posterClone = posterContent.cloneNode(true);
+                // Make sure cloned text is not editable for the screenshot
+                posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
+
                 const titleEl = posterClone.querySelector('#preview-title');
                 titleEl.textContent = settings.title;
                 titleEl.style.fontSize = `${settings.titleFontSize}px`;
@@ -801,7 +792,6 @@
                 buttonClass: 'btn'
             }); 
             
-            // Check localStorage first. If it's empty, the hardcoded defaults will be used.
             const storedState = localStorage.getItem('posterGeneratorState');
             if (storedState) {
                 loadState();
@@ -809,13 +799,13 @@
 
             renderCustomizations();
             renderEventsInPreview();
-            updatePreviewSize(); // Initial sizing of the preview
+            updatePreviewSize(); 
         });
         
-        window.addEventListener('resize', updatePreviewSize); // Update preview on window resize
+        window.addEventListener('resize', updatePreviewSize); 
 
 
-        // Customization listeners
+        // Customization listeners (from form inputs)
         posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; saveState(); renderCustomizations(); });
         posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; saveState(); renderCustomizations(); });
         posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; saveState(); renderCustomizations(); });
@@ -827,8 +817,16 @@
         gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; saveState(); renderCustomizations();});
         gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; saveState(); renderCustomizations();});
 
+        // Direct editing listeners (from canvas)
+        previewTitle.addEventListener('blur', handleDirectEdit);
+        previewSubtitle.addEventListener('blur', handleDirectEdit);
+        previewFooter.addEventListener('blur', handleDirectEdit);
+        
+        previewTitle.addEventListener('keydown', preventLineBreaks);
+        previewSubtitle.addEventListener('keydown', preventLineBreaks);
+        previewFooter.addEventListener('keydown', preventLineBreaks);
 
-        // Event listeners
+        // Other event listeners
         eventForm.addEventListener('submit', addEvent);
         isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
         isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
@@ -836,7 +834,6 @@
 
         downloadBtn.addEventListener('click', downloadImage);
         clearBtn.addEventListener('click', clearAllEvents);
-        populateBtn.addEventListener('click', populateWithTestData);
         sortBtn.addEventListener('click', () => {
             sortEvents();
             saveState();
