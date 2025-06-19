@@ -132,10 +132,9 @@
          * Initializes the application after Material Web Components are ready.
          */
         async function initializeApp() {
-            // FIX: Wait for a key component to be defined before running the app logic.
-            // This prevents race conditions where the script tries to create elements
-            // before they have been registered by the Material library.
-            await customElements.whenDefined('md-filled-button');
+            // FIX: Wait for the specific chip component we create in a loop to be defined.
+            // This is a more reliable way to prevent the race condition.
+            await customElements.whenDefined('md-filter-chip');
 
             const selectedItems = new Set();
             const itemGrid = document.getElementById('item-grid');
