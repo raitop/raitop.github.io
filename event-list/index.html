@@ -137,10 +137,10 @@
             <!-- Middle Column: Poster Preview -->
             <div class="lg:col-span-1 flex-1 flex flex-col items-center">
                 <h2 class="text-2xl font-bold mb-4 text-center">Poster Preview</h2>
-                <!-- Container for the scaled preview -->
-                <div class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900" style="aspect-ratio: 1080 / 1920;">
-                    <!-- This div is scaled down -->
-                    <div id="poster-preview" class="transform origin-top-left h-full w-full" style="transform: scale(calc(1/3)); width: 300%; height: 300%;">
+                <!-- Container for the scaled preview. It sets the size and clips. -->
+                <div id="preview-wrapper" class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900" style="aspect-ratio: 1080 / 1920;">
+                    <!-- This div is scaled by JavaScript to fit the container above -->
+                    <div id="poster-scaler" class="origin-top-left">
                         <!-- The actual poster content that will be rendered -->
                         <div id="poster-content" class="text-white flex flex-col p-24 relative overflow-hidden">
                             <div id="poster-background-overlay" class="absolute inset-0 z-0"></div>
@@ -306,6 +306,8 @@
         const loadingIndicator = document.getElementById('loading-indicator');
 
         // --- PREVIEW DOM REFERENCES ---
+        const previewWrapper = document.getElementById('preview-wrapper');
+        const posterScaler = document.getElementById('poster-scaler');
         const posterContent = document.getElementById('poster-content');
         const posterBackgroundOverlay = document.getElementById('poster-background-overlay');
         const previewTitle = document.getElementById('preview-title');
@@ -394,6 +396,15 @@
                 }
             }
         };
+        
+        // --- DYNAMIC PREVIEW SIZING ---
+        function updatePreviewSize() {
+            if (!previewWrapper || !posterScaler) return;
+            const containerWidth = previewWrapper.offsetWidth;
+            const scale = containerWidth / 1080; // 1080 is the poster's native width
+            posterScaler.style.transform = `scale(${scale})`;
+        }
+
 
         // --- RENDERING FUNCTIONS ---
         const createEventElement = (event, index, showActionButtons) => {
@@ -780,8 +791,12 @@
             loadState();
             renderCustomizations();
             renderEventsInPreview();
+            updatePreviewSize(); // Initial sizing of the preview
         });
         
+        window.addEventListener('resize', updatePreviewSize); // Update preview on window resize
+
+
         // Customization listeners
         posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; saveState(); renderCustomizations(); });
         posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; saveState(); renderCustomizations(); });
@@ -817,3 +832,12 @@
     </script>
 </body>
 </html>
+```
+
+I've made the following changes:
+
+1.  **HTML:** Simplified the structure of the poster preview area to make it easier to control.
+2.  **JavaScript:** Added a new function, `updatePreviewSize()`, that precisely calculates the correct scale for the preview based on its container's current size.
+3.  **Event Listeners:** This new function is now called when the page first loads and whenever the browser window is resized, ensuring the preview always looks correct.
+
+The preview poster should now fit perfectly within its rounded border on any screen si
