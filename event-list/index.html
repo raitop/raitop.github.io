@@ -11,12 +11,12 @@
     <!-- VanillaJS Datepicker for calendar input -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker-bs5.min.css">
     <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/js/datepicker-full.min.js"></script>
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Inter, Playfair Display, Roboto Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:wght@400..900&family=Roboto+Mono:wght@100..700&display=swap" rel="stylesheet">
     <style>
-        /* Apply the Inter font family */
+        /* Apply a base font */
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -29,6 +29,15 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+        }
+
+        #poster-background-image {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            transition: filter 0.3s ease;
         }
 
         /* Default Story Size (1080x1920) */
@@ -63,7 +72,7 @@
             padding-right: 0; /* Override Tailwind's px-4 to widen content */
         }
          #poster-content.size-post #poster-footer-wrapper {
-            margin-top: 0; /* Override default margin */
+             margin-top: 0; /* Override default margin */
          }
 
 
@@ -148,6 +157,33 @@
             opacity: 1;
             transform: translateY(0);
         }
+        /* Custom color picker style */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 40px;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            background-color: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 1px solid #4b5563; /* gray-600 */
+            border-radius: 0.5rem;
+        }
+
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
 
     </style>
 </head>
@@ -160,6 +196,7 @@
         </header>
         
         <input type="file" id="import-input" class="hidden" accept=".json">
+        <input type="file" id="background-image-input" class="hidden" accept="image/*">
 
 
         <div class="flex flex-col lg:grid lg:grid-cols-3 lg:gap-8">
@@ -210,25 +247,30 @@
                     </button>
                 </form>
 
-                 <!-- List Management Controls -->
+                <!-- List Management Controls -->
                 <div class="mt-8">
                      <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">List Management</h2>
                      <div class="space-y-2">
                          <button id="sort-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                            <span>Sort by Date</span>
+                             <span>Sort by Date</span>
                         </button>
-                        <button id="export-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            <span>Export Data</span>
+
+                        <div class="flex items-center justify-center pt-2">
+                           <input id="export-with-image" name="export-with-image" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded bg-gray-700" checked>
+                           <label for="export-with-image" class="ml-2 block text-sm text-gray-300">Include Background Image in Export</label>
+                        </div>
+                         <button id="export-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                             <span>Export Data</span>
                         </button>
-                         <button id="import-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4 4m0 0l-4 4m4-4H4" /></svg>
-                            <span>Import Data</span>
+                          <button id="import-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4 4m0 0l-4 4m4-4H4" /></svg>
+                             <span>Import Data</span>
                         </button>
-                        <button id="clear-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            <span>Clear All Events</span>
+                         <button id="clear-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                             <span>Clear All Events</span>
                         </button>
                     </div>
                 </div>
@@ -253,16 +295,17 @@
                     <div id="poster-scaler" class="origin-top-left">
                         <!-- The actual poster content that will be rendered -->
                         <div id="poster-content" class="text-white">
-                            <div id="poster-background-overlay" class="absolute inset-0 z-0"></div>
-                            <header id="poster-header" class="text-center relative z-10 flex-shrink-0">
+                            <div id="poster-background-image"></div>
+                            <div id="poster-background-overlay" class="absolute inset-0 z-10"></div>
+                            <header id="poster-header" class="text-center relative z-20 flex-shrink-0">
                                 <h1 id="preview-title" class="font-black tracking-tighter uppercase" contenteditable="true" data-setting="title"></h1>
                                 <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2" contenteditable="true" data-setting="subtitle"></p>
                             </header>
                             <!-- Using class instead of ID for safer cloning -->
-                            <main class="event-list-container overflow-y-auto py-8 px-4 relative z-10">
+                            <main class="event-list-container overflow-y-auto py-8 px-4 relative z-20">
                                 <!-- Events will be dynamically inserted here -->
                             </main>
-                            <div id="poster-footer-wrapper" class="mt-auto pt-4 relative z-10 flex-shrink-0">
+                            <div id="poster-footer-wrapper" class="mt-auto pt-4 relative z-20 flex-shrink-0">
                                 <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
                                 <footer id="preview-footer" class="text-center text-gray-500 text-2xl" contenteditable="true" data-setting="footer"></footer>
                                 <p id="preview-url" class="text-center text-gray-600 text-lg mt-1"></p>
@@ -273,70 +316,182 @@
             </div>
             
             <!-- Right Column: Other Controls -->
-            <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Poster Customization</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
-                        <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                            <option value="1080x1920">1080 x 1920 (Story)</option>
-                            <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="poster-title" class="block text-sm font-medium text-gray-300">Title</label>
-                        <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                    </div>
-                    <div>
-                        <label for="title-font-size" class="block text-sm font-medium text-gray-300">Title Font Size: <span id="font-size-value">98</span>px</label>
-                        <input type="range" id="title-font-size" min="80" max="200" value="98" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                        <p id="font-size-recommendation" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <div>
-                        <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle</label>
-                        <input type="text" id="poster-subtitle" name="poster-subtitle" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                    </div>
-                    <div>
-                        <label for="poster-background" class="block text-sm font-medium text-gray-300">Background Preset</label>
-                        <select id="poster-background" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                            <option value="deep-space">Deep Space (Default)</option>
-                            <option value="sunset">Sunset</option>
-                            <option value="oceanic">Oceanic</option>
-                            <option value="minty">Minty</option>
-                            <option value="royal">Royal</option>
-                            <option value="gotham">Gotham</option>
-                            <option value="custom">Custom Gradient</option>
-                        </select>
-                    </div>
-                    <div id="custom-gradient-controls" class="hidden space-y-2">
-                        <div class="flex items-center gap-4">
-                            <label for="gradient-start-color" class="text-sm font-medium text-gray-300">Start</label>
-                            <input type="color" id="gradient-start-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+            <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg space-y-8">
+                 <div>
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Poster Customization</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
+                            <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                <option value="1080x1920">1080 x 1920 (Story)</option>
+                                <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
+                            </select>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <label for="gradient-end-color" class="text-sm font-medium text-gray-300">End</label>
-                             <input type="color" id="gradient-end-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+                        <div>
+                            <label for="poster-title" class="block text-sm font-medium text-gray-300">Title Text</label>
+                            <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        </div>
+                        <div>
+                            <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle Text</label>
+                            <input type="text" id="poster-subtitle" name="poster-subtitle" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        </div>
+                        <div>
+                            <label for="poster-background" class="block text-sm font-medium text-gray-300">Background Type</label>
+                            <select id="poster-background" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                <option value="deep-space">Deep Space (Default)</option>
+                                <option value="sunset">Sunset</option>
+                                <option value="oceanic">Oceanic</option>
+                                <option value="minty">Minty</option>
+                                <option value="royal">Royal</option>
+                                <option value="gotham">Gotham</option>
+                                <option value="custom-gradient">Custom Gradient</option>
+                                <option value="image">Image</option>
+                            </select>
+                        </div>
+                        <div id="custom-gradient-controls" class="hidden space-y-2 border-t border-gray-700 pt-4">
+                            <div class="flex items-center gap-4">
+                                <label for="gradient-start-color" class="text-sm font-medium text-gray-300">Start</label>
+                                <input type="color" id="gradient-start-color" value="#1f2937">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <label for="gradient-end-color" class="text-sm font-medium text-gray-300">End</label>
+                                 <input type="color" id="gradient-end-color" value="#111827">
+                            </div>
+                        </div>
+                         <!-- Image Background Controls -->
+                        <div id="image-background-controls" class="hidden space-y-4 border-t border-gray-700 pt-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="upload-image-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-sm">Upload Image</button>
+                                <button id="remove-image-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-sm">Remove Image</button>
+                            </div>
+                             <div class="flex items-center justify-between mt-1">
+                                <label for="background-blur-input" class="block text-sm font-medium text-gray-300">Blur</label>
+                                <div class="relative flex items-center">
+                                    <button id="background-blur-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                    <input type="number" id="background-blur-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="50" step="1">
+                                    <button id="background-blur-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                </div>
+                            </div>
+                             <div class="flex items-center justify-between">
+                                <label for="overlay-color" class="block text-sm font-medium text-gray-300">Overlay Color</label>
+                                <input type="color" id="overlay-color" value="#000000" class="w-2/5">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium text-gray-300">Overlay Opacity (%)</label>
+                                <div class="relative flex items-center">
+                                    <button id="overlay-opacity-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                    <input type="number" id="overlay-opacity-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="100" step="1">
+                                    <button id="overlay-opacity-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                </div>
+                            </div>
+                        </div>
+                         <div>
+                            <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
+                            <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        </div>
+                         <div>
+                            <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
+                            <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                            <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
+                        </div>
+                         <div class="flex items-center">
+                            <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                            <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
                         </div>
                     </div>
-                     <div>
-                        <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
-                        <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                 </div>
+
+                 <!-- Text Customization Section -->
+                 <div>
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Text Customization</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="text-style-category" class="block text-sm font-medium text-gray-300">Edit Text Style For</label>
+                            <select id="text-style-category" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2"></select>
+                        </div>
+
+                        <div id="text-style-controls" class="space-y-4 border-t border-gray-700 pt-4">
+                            <!-- Font Family -->
+                            <div>
+                                <label for="font-family" class="block text-sm font-medium text-gray-300">Font Family</label>
+                                <select id="font-family" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2"></select>
+                            </div>
+                            <!-- Color -->
+                             <div class="flex items-center justify-between">
+                                <label for="text-color" class="block text-sm font-medium text-gray-300">Color</label>
+                                <input type="color" id="text-color" class="w-2/5">
+                            </div>
+                            <!-- Font Size & Weight -->
+                            <div class="flex items-center justify-between">
+                                <label for="font-size-input" class="block text-sm font-medium text-gray-300">Size</label>
+                                <div class="relative flex items-center">
+                                     <button id="font-size-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                     <input type="number" id="font-size-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="1">
+                                     <button id="font-size-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="font-weight-input" class="block text-sm font-medium text-gray-300">Weight</label>
+                                 <div class="relative flex items-center">
+                                     <button id="font-weight-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                     <input type="number" id="font-weight-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="100" max="900" step="100">
+                                     <button id="font-weight-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                </div>
+                            </div>
+                            <!-- Text Stroke -->
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium text-gray-300">Outline</label>
+                                <div class="flex items-center gap-2">
+                                     <input type="color" id="stroke-color" class="w-24">
+                                    <div class="relative flex items-center">
+                                         <button id="stroke-width-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                         <input type="number" id="stroke-width-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="10" step="0.1">
+                                         <button id="stroke-width-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                             <!-- Text Shadow -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-300">Shadow</label>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm text-gray-400">Color:</label>
+                                    <div class="w-2/5">
+                                        <input type="color" id="shadow-color">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="shadow-blur-input" class="text-sm text-gray-400">Blur:</label>
+                                    <div class="relative flex items-center">
+                                        <button id="shadow-blur-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                        <input type="number" id="shadow-blur-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="50" step="1">
+                                        <button id="shadow-blur-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label for="shadow-offset-x-input" class="text-sm text-gray-400">X Offset:</label>
+                                    <div class="relative flex items-center">
+                                        <button id="shadow-offset-x-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                        <input type="number" id="shadow-offset-x-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="-50" max="50" step="1">
+                                        <button id="shadow-offset-x-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                     <label for="shadow-offset-y-input" class="text-sm text-gray-400">Y Offset:</label>
+                                     <div class="relative flex items-center">
+                                        <button id="shadow-offset-y-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
+                                        <input type="number" id="shadow-offset-y-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="-50" max="50" step="1">
+                                        <button id="shadow-offset-y-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                     <div>
-                        <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
-                        <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                        <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <div class="flex items-center">
-                        <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                        <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
-                    </div>
-                     <div class="flex items-center">
-                        <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                        <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
-                    </div>
-                </div>
-                
+                 </div>
+                 
                  <!-- Status Message Area -->
                 <div id="status-container" class="mt-4 h-8">
                      <div id="status-message" class="text-center text-green-400 font-semibold"></div>
@@ -363,14 +518,50 @@
     (function() {
         // --- CONFIGURATION CONSTANTS ---
         const CONFIG = {
-            LOCAL_STORAGE_KEY: 'posterGeneratorState',
+            DB_NAME: 'PosterGeneratorDB',
+            DB_VERSION: 1,
+            STORE_NAME: 'userState',
             DEBOUNCE_DELAY: 300,
             STATUS_MESSAGE_DURATION: 2000,
         };
 
+        // --- IndexedDB Helper ---
+        const dbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
+            request.onerror = () => reject("Error opening IndexedDB.");
+            request.onsuccess = () => resolve(request.result);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(CONFIG.STORE_NAME)) {
+                    db.createObjectStore(CONFIG.STORE_NAME);
+                }
+            };
+        });
+
+        const idb = {
+            get: (key) => dbPromise.then(db => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(CONFIG.STORE_NAME, 'readonly');
+                    const store = transaction.objectStore(CONFIG.STORE_NAME);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }),
+            set: (key, value) => dbPromise.then(db => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(CONFIG.STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(CONFIG.STORE_NAME);
+                    const request = store.put(value, key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }),
+        };
+
+
         // --- DOM REFERENCES ---
         const getEl = (id) => document.getElementById(id);
-        const queryEl = (selector) => document.querySelector(selector);
         
         // Form & Controls
         const eventForm = getEl('event-form');
@@ -390,9 +581,6 @@
         const eventsPerPageInput = getEl('events-per-page');
         const showTimestampCheckbox = getEl('show-timestamp');
         const showUrlCheckbox = getEl('show-url');
-        const titleFontSizeSlider = getEl('title-font-size');
-        const fontSizeValueSpan = getEl('font-size-value');
-        const fontSizeRecommendation = getEl('font-size-recommendation');
         const eventsPerPageRecommendation = getEl('events-per-page-recommendation');
         const customGradientControls = getEl('custom-gradient-controls');
         const gradientStartColorInput = getEl('gradient-start-color');
@@ -403,19 +591,22 @@
         const clearBtn = getEl('clear-btn');
         const sortBtn = getEl('sort-btn');
         const exportBtn = getEl('export-btn');
+        const exportWithImageCheckbox = getEl('export-with-image');
         const importBtn = getEl('import-btn');
         const importInput = getEl('import-input');
+        const backgroundImageInput = getEl('background-image-input');
+        const uploadImageBtn = getEl('upload-image-btn');
+        const removeImageBtn = getEl('remove-image-btn');
         const loadingIndicator = getEl('loading-indicator');
         const statusMessage = getEl('status-message');
 
         // Preview Area
-        const previewWrapper = getEl('preview-wrapper');
-        const posterScaler = getEl('poster-scaler');
         const posterContent = getEl('poster-content');
+        const posterBackgroundImage = getEl('poster-background-image');
         const posterBackgroundOverlay = getEl('poster-background-overlay');
         const previewTitle = getEl('preview-title');
         const previewSubtitle = getEl('preview-subtitle');
-        const previewListContainer = queryEl('#poster-content .event-list-container');
+        const previewListContainer = document.querySelector('#poster-content .event-list-container');
         const previewTimestamp = getEl('preview-timestamp');
         const previewFooter = getEl('preview-footer');
         const previewUrl = getEl('preview-url');
@@ -425,19 +616,56 @@
         const modalTitle = getEl('modal-title');
         const modalMessage = getEl('modal-message');
         const modalButtons = getEl('modal-buttons');
+        
+        // Text Style Controls
+        const textStyleCategorySelect = getEl('text-style-category');
+        const fontFamilySelect = getEl('font-family');
+        const textColorInput = getEl('text-color');
+        
+        // Image Background Controls
+        const imageBackgroundControls = getEl('image-background-controls');
+        const overlayColorInput = getEl('overlay-color');
 
         let datepickerInstance;
+        let currentImageObjectUrl = null;
 
-        // --- DATA STATE (PRE-POPULATED) ---
+        // --- DATA STATE ---
         let events = [
-            { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bojongsoang, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
+            { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bojongsoang, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
             { "name": "Bunka no Hi", "date": "28/06/2025", "location": "Cihampelas Walk, Bandung", "socialMedia": "@bunkanohi_", "priceText": "Free", "isFree": true },
-            { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
+            { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
             { "name": "Genshiken ITB", "date": "05/07/2025", "location": "Aula Timur ITB", "socialMedia": "@genshikenitb", "priceText": "TBA", "isFree": false },
-            { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
+            { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
             { "name": "Festival Axia: KomyuDoujin", "date": "TBA", "location": "TBA", "socialMedia": "@festival.axia", "priceText": "TBA", "isFree": false }
         ];
         
+        const createDefaultStyle = (overrides = {}) => ({
+            fontFamily: "'Inter', sans-serif",
+            fontSize: 32,
+            fontWeight: 400,
+            color: '#E5E7EB', // gray-200
+            strokeColor: '#000000',
+            strokeWidth: 0,
+            shadowColor: '#000000',
+            shadowBlur: 0,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            ...overrides,
+        });
+
+        const defaultTextStyles = {
+            title: createDefaultStyle({ fontSize: 82, fontWeight: 900, color: '#FFFFFF' }),
+            subtitle: createDefaultStyle({ fontSize: 52, fontWeight: 500, color: '#9CA3AF' }),
+            eventName: createDefaultStyle({ fontSize: 52, fontWeight: 700, color: '#FFFFFF' }),
+            eventDetails: createDefaultStyle({ fontSize: 32, fontWeight: 400, color: '#D1D5DB' }),
+            price: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#67E8F9' }), // cyan-300
+            priceFree: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#6EE7B7' }), // green-300
+            priceTba: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#FCD34D' }), // yellow-300
+            footer: createDefaultStyle({ fontSize: 24, fontWeight: 400, color: '#6B7280' }),
+            timestamp: createDefaultStyle({ fontSize: 20, fontWeight: 400, color: '#6B7280' }),
+            url: createDefaultStyle({ fontSize: 18, fontWeight: 400, color: '#4B5563' }),
+        };
+
         let settings = {
             "title": "UPCOMING EVENT",
             "subtitle": "List on Bandung",
@@ -446,9 +674,32 @@
             "eventsPerPage": 9,
             "showTimestamp": true,
             "showUrl": false,
-            "titleFontSize": "98",
             "posterSize": "1080x1920",
-            "customGradient": { "start": "#1f2937", "end": "#111827" }
+            "customGradient": { "start": "#1f2937", "end": "#111827" },
+            "backgroundImage": null,
+            "backgroundBlur": 0,
+            "overlayColor": "#000000",
+            "overlayOpacity": 0.5,
+            "textStyles": JSON.parse(JSON.stringify(defaultTextStyles)) // Deep copy
+        };
+        
+        const textStyleCategories = {
+             title: { label: 'Title', elements: () => [previewTitle] },
+             subtitle: { label: 'Subtitle', elements: () => [previewSubtitle] },
+             eventName: { label: 'Event Name', elements: () => document.querySelectorAll('.event-item-name') },
+             eventDetails: { label: 'Event Details (Date, Loc)', elements: () => document.querySelectorAll('.event-item-details-text') },
+             price: { label: 'Ticket Price (Default)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="default"]') },
+             priceFree: { label: 'Ticket Price (Free)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="free"]') },
+             priceTba: { label: 'Ticket Price (TBA)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="tba"]') },
+             footer: { label: 'Footer', elements: () => [previewFooter] },
+             timestamp: { label: 'Timestamp', elements: () => [previewTimestamp] },
+             url: { label: 'URL', elements: () => [previewUrl] },
+        };
+        
+        const availableFonts = {
+            "'Inter', sans-serif": "Inter",
+            "'Playfair Display', serif": "Playfair Display",
+            "'Roboto Mono', monospace": "Roboto Mono"
         };
 
         const gradients = {
@@ -515,31 +766,48 @@
             };
         }
         
-        // --- DATA PERSISTENCE ---
-        const saveState = () => {
-            localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify({ events, settings }));
-            showStatusMessage('Changes saved!');
+        // --- DATA PERSISTENCE (using IndexedDB) ---
+        async function saveState() {
+            try {
+                await idb.set('appState', { events, settings });
+                showStatusMessage('Changes saved!');
+            } catch (error) {
+                console.error("Error saving state to IndexedDB:", error);
+                showAlert("Save Error", "Could not save your changes. Please try again.");
+            }
         };
-        const debouncedSaveState = debounce(saveState);
+        const debouncedSaveState = debounce(saveState, 500);
 
-        const loadState = () => {
-            const storedState = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
-            if (storedState) {
-                try {
-                    const loadedState = JSON.parse(storedState);
-                    if (loadedState.events && loadedState.settings) {
-                        events = loadedState.events;
-                        settings = { ...settings, ...loadedState.settings };
+        async function loadState() {
+            try {
+                const loadedState = await idb.get('appState');
+                if (loadedState && loadedState.events && loadedState.settings) {
+                    events = loadedState.events;
+                    const loadedSettings = loadedState.settings;
+                    
+                    settings = { ...settings, ...loadedSettings };
+
+                    if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
+                    if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
+
+                    // Handle loading image Blob
+                    if (settings.backgroundImage instanceof Blob) {
+                        if (currentImageObjectUrl) {
+                            URL.revokeObjectURL(currentImageObjectUrl);
+                        }
+                        currentImageObjectUrl = URL.createObjectURL(settings.backgroundImage);
                     }
-                } catch(e) {
-                    console.error("Could not parse state from localStorage", e);
-                    localStorage.removeItem(CONFIG.LOCAL_STORAGE_KEY);
                 }
+            } catch (error) {
+                console.error("Could not load state from IndexedDB:", error);
+                // Fallback to default state if loading fails
             }
         };
         
         // --- DYNAMIC PREVIEW SIZING ---
         function updatePreviewSize() {
+            const previewWrapper = getEl('preview-wrapper');
+            const posterScaler = getEl('poster-scaler');
             if (!previewWrapper || !posterScaler) return;
             const [width, height] = settings.posterSize.split('x').map(Number);
             previewWrapper.style.aspectRatio = `${width} / ${height}`;
@@ -549,7 +817,26 @@
         }
 
 
-        // --- RENDERING FUNCTIONS ---
+        // --- RENDERING & STYLING FUNCTIONS ---
+        function applyStylesToElement(element, styleObject) {
+            if (!element || !styleObject) return;
+            element.style.fontFamily = styleObject.fontFamily;
+            element.style.fontSize = `${styleObject.fontSize}px`;
+            element.style.fontWeight = styleObject.fontWeight;
+            element.style.color = styleObject.color;
+            element.style.webkitTextStroke = `${styleObject.strokeWidth}px ${styleObject.strokeColor}`;
+            element.style.textShadow = `${styleObject.shadowOffsetX}px ${styleObject.shadowOffsetY}px ${styleObject.shadowBlur}px ${styleObject.shadowColor}`;
+        }
+        
+        function updateAllTextStyles() {
+            Object.keys(textStyleCategories).forEach(key => {
+                const category = textStyleCategories[key];
+                const elements = category.elements();
+                const styles = settings.textStyles[key];
+                elements.forEach(el => applyStylesToElement(el, styles));
+            });
+        }
+
         const createEventElement = (event, index, showActionButtons) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'flex items-center gap-4';
@@ -557,10 +844,15 @@
             const eventElement = document.createElement('div');
             eventElement.className = 'event-item py-4 border-b border-white/20 flex-grow';
             
-            let priceColor;
-            if (event.priceText === 'Free') priceColor = 'text-green-400';
-            else if (event.priceText === 'TBA') priceColor = 'text-yellow-400';
-            else priceColor = 'text-cyan-400';
+            let priceStyleKey = 'price';
+            let priceType = 'default';
+            if (event.priceText === 'Free') {
+                priceStyleKey = 'priceFree';
+                priceType = 'free';
+            } else if (event.priceText === 'TBA') {
+                priceStyleKey = 'priceTba';
+                priceType = 'tba';
+            }
 
             const actionButtonsHtml = showActionButtons 
                 ? `
@@ -573,18 +865,24 @@
             
             eventElement.innerHTML = `
                 <div class="flex justify-between items-start gap-4">
-                    <h3 class="text-5xl font-bold text-white break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
-                    <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0 pl-4" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
+                    <h3 class="event-item-name break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
+                    <p class="event-item-price flex-shrink-0 pl-4" data-price-type="${priceType}" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
                 </div>
-                <div class="mt-4 text-3xl text-gray-300">
+                <div class="mt-4">
                     <div class="flex flex-wrap items-center gap-x-4">
-                        <span contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
-                        <span class="text-gray-500">|</span>
-                        <span contenteditable="true" data-index="${index}" data-field="location">${event.location}</span>
-                        ${event.socialMedia ? `<span class="text-gray-500">|</span><span contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
+                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
+                        <span class="event-item-details-text text-gray-500">|</span>
+                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="location">${event.location}</span>
+                        ${event.socialMedia ? `<span class="event-item-details-text text-gray-500">|</span><span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
                     </div>
                 </div>
             `;
+            
+            // Apply styles after innerHTML is set
+            applyStylesToElement(eventElement.querySelector('.event-item-name'), settings.textStyles.eventName);
+            eventElement.querySelectorAll('.event-item-details-text').forEach(el => applyStylesToElement(el, settings.textStyles.eventDetails));
+            applyStylesToElement(eventElement.querySelector('.event-item-price'), settings.textStyles[priceStyleKey]);
+            
 
             wrapper.appendChild(eventElement);
             if(showActionButtons) {
@@ -607,6 +905,7 @@
                 const eventElement = createEventElement(event, index, true);
                 previewListContainer.appendChild(eventElement);
             });
+            updateAllTextStyles(); // Re-apply styles to headers/footers which are not in the loop
         };
 
         function updateFormControls() {
@@ -618,23 +917,25 @@
             eventsPerPageInput.value = settings.eventsPerPage;
             showTimestampCheckbox.checked = settings.showTimestamp;
             showUrlCheckbox.checked = settings.showUrl;
-            titleFontSizeSlider.value = settings.titleFontSize;
-            fontSizeValueSpan.textContent = settings.titleFontSize;
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
+            
+            // Populate text style editor dropdowns
+            textStyleCategorySelect.innerHTML = Object.keys(textStyleCategories).map(key => `<option value="${key}">${textStyleCategories[key].label}</option>`).join('');
+            fontFamilySelect.innerHTML = Object.keys(availableFonts).map(key => `<option value="${key}">${availableFonts[key]}</option>`).join('');
+            
+            populateTextStyleEditor(); // Populate with the first category's style
         }
         
         function updateDynamicRecommendations() {
              if (settings.posterSize === '1080x1350') {
-                eventsPerPageRecommendation.textContent = 'Recommended: 5 for 4:5 size.';
-                fontSizeRecommendation.textContent = 'Recommended: 98px for 4:5 size.';
+                 eventsPerPageRecommendation.textContent = 'Recommended: 5 for 4:5 size.';
             } else {
-                eventsPerPageRecommendation.textContent = 'Recommended: 9 for Story size.';
-                fontSizeRecommendation.textContent = ''; // No recommendation for story size
+                 eventsPerPageRecommendation.textContent = 'Recommended: 9 for Story size.';
             }
         }
 
-        function updatePreviewStyles() {
+        function updatePosterLook() {
             // Update size-related classes
             if (settings.posterSize === '1080x1350') {
                 posterContent.classList.remove('size-story');
@@ -646,22 +947,39 @@
             updatePreviewSize();
             updateDynamicRecommendations();
 
-            // Update text and other styles
-            previewTitle.style.fontSize = `${settings.titleFontSize}px`;
+            // Update text content from settings
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
+            previewFooter.textContent = settings.footer;
             
-            if(settings.background === 'custom') {
-                posterBackgroundOverlay.style.backgroundImage = `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`;
-                customGradientControls.classList.remove('hidden');
+            // Toggle control visibility
+            customGradientControls.classList.toggle('hidden', settings.background !== 'custom-gradient');
+            imageBackgroundControls.classList.toggle('hidden', settings.background !== 'image');
+
+            // Apply background styles
+            posterBackgroundImage.style.filter = `blur(${settings.backgroundBlur}px)`;
+            
+            if (settings.background === 'image') {
+                posterBackgroundImage.style.backgroundImage = currentImageObjectUrl ? `url(${currentImageObjectUrl})` : 'none';
+                posterBackgroundOverlay.style.backgroundImage = 'none';
+                posterBackgroundOverlay.style.backgroundColor = settings.overlayColor;
+                posterBackgroundOverlay.style.opacity = settings.overlayOpacity;
             } else {
-                posterBackgroundOverlay.style.backgroundImage = gradients[settings.background];
-                customGradientControls.classList.add('hidden');
+                 posterBackgroundImage.style.backgroundImage = 'none';
+                 posterBackgroundImage.style.filter = 'none';
+                 const gradient = settings.background === 'custom-gradient'
+                    ? `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`
+                    : gradients[settings.background];
+                posterBackgroundOverlay.style.backgroundImage = gradient;
+                posterBackgroundOverlay.style.backgroundColor = 'transparent';
+                posterBackgroundOverlay.style.opacity = 1;
             }
             
-            previewFooter.textContent = settings.footer;
             previewTimestamp.style.display = 'none';
             previewUrl.style.display = 'none';
+
+            // Apply all text styles
+            updateAllTextStyles();
         }
 
         // --- EVENT HANDLERS & LOGIC ---
@@ -715,7 +1033,7 @@
 
             events.push(newEvent);
             sortEvents();
-            saveState();
+            await saveState();
             renderEventsInPreview();
             eventForm.reset();
             togglePriceInput();
@@ -738,9 +1056,9 @@
         
         function clearAllEvents() {
             if (events.length === 0) return;
-            showConfirm('Clear All Events', 'Are you sure you want to delete all events? This action cannot be undone.', () => {
+            showConfirm('Clear All Events', 'Are you sure you want to delete all events? This action cannot be undone.', async () => {
                 events = [];
-                saveState();
+                await saveState();
                 renderEventsInPreview();
             });
         }
@@ -774,16 +1092,33 @@
             }
         }
         
-        function exportData() {
+        async function exportData() {
             if (events.length === 0) {
-                 showAlert('Cannot Export', 'There are no events to export. Please add at least one event.');
-                 return;
+                showAlert('Cannot Export', 'There are no events to export. Please add at least one event.');
+                return;
             }
-            const dataStr = JSON.stringify({ events, settings }, null, 2);
-            const dataBlob = new Blob([dataStr], {type: "application/json"});
+            
+            const includeImage = exportWithImageCheckbox.checked;
+            let exportableSettings = JSON.parse(JSON.stringify(settings)); // Deep clone to avoid mutation
+
+            if (includeImage && settings.backgroundImage instanceof Blob) {
+                const toBase64 = file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+                exportableSettings.backgroundImage = await toBase64(settings.backgroundImage);
+            } else {
+                // If not including image or if it's not a blob, nullify it
+                exportableSettings.backgroundImage = null;
+            }
+
+            const dataStr = JSON.stringify({ events, settings: exportableSettings }, null, 2);
+            const dataBlob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
-            link.download = `event-poster-data-${new Date().toISOString().slice(0,10)}.json`;
+            link.download = `event-poster-data-${new Date().toISOString().slice(0, 10)}.json`;
             link.href = url;
             document.body.appendChild(link);
             link.click();
@@ -791,21 +1126,38 @@
             URL.revokeObjectURL(url);
         }
 
-        function importData(e) {
+        async function importData(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const importedState = JSON.parse(e.target.result);
-                    if (importedState && importedState.events && importedState.settings) {
-                        events = importedState.events;
-                        settings = { ...settings, ...importedState.settings };
+                    if (importedState && importedState.settings) {
+                        events = importedState.events || [];
+                        const loadedSettings = importedState.settings;
+                        
+                        settings = { ...settings, ...loadedSettings };
+
+                        // If the imported image is a Base64 string, convert it to a Blob for storage
+                        if (typeof settings.backgroundImage === 'string' && settings.backgroundImage.startsWith('data:image')) {
+                             const fetchRes = await fetch(settings.backgroundImage);
+                             settings.backgroundImage = await fetchRes.blob();
+                        } else {
+                            // If it's not a valid data URL, nullify it.
+                            settings.backgroundImage = null;
+                        }
+
+                        if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
+                        if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
+
+
+                        await saveState();
+                        await loadState(); // Reload to create new object URL for the image
                         updateFormControls();
-                        updatePreviewStyles();
+                        updatePosterLook();
                         renderEventsInPreview();
-                        saveState();
                         showStatusMessage('Data imported successfully!');
                     } else {
                         showAlert('Import Error', 'Invalid data file format.');
@@ -842,47 +1194,47 @@
                  const index = parseInt(element.dataset.index, 10);
                  const field = element.dataset.field;
                  const newValue = element.textContent.trim();
-                 
+                
                  if (!events[index]) return;
 
                  if (field === 'priceText') {
-                     const upperCaseValue = newValue.toUpperCase();
-                     let newPriceText;
-                     if (upperCaseValue === 'FREE') {
-                         newPriceText = 'Free';
-                         events[index].isFree = true;
-                     } else if (upperCaseValue === 'TBA') {
-                         newPriceText = 'TBA';
-                         events[index].isFree = false;
-                     } else {
-                         const numericValue = parseFloat(newValue.replace(/[^0-9]/g, ''));
-                         if (!isNaN(numericValue)) {
-                             newPriceText = formatPrice(numericValue);
-                             events[index].isFree = false;
-                         } else {
-                             newPriceText = 'TBA';
-                             events[index].isFree = false;
-                         }
-                     }
-                     
-                     if (events[index].priceText !== newPriceText) {
-                        events[index].priceText = newPriceText;
-                        debouncedSaveState();
-                        renderEventsInPreview(); 
-                     }
+                       const upperCaseValue = newValue.toUpperCase();
+                       let newPriceText;
+                       if (upperCaseValue === 'FREE') {
+                           newPriceText = 'Free';
+                           events[index].isFree = true;
+                       } else if (upperCaseValue === 'TBA') {
+                           newPriceText = 'TBA';
+                           events[index].isFree = false;
+                       } else {
+                           const numericValue = parseFloat(newValue.replace(/[^0-9]/g, ''));
+                           if (!isNaN(numericValue)) {
+                               newPriceText = formatPrice(numericValue);
+                               events[index].isFree = false;
+                           } else {
+                               newPriceText = 'TBA';
+                               events[index].isFree = false;
+                           }
+                       }
+                      
+                       if (events[index].priceText !== newPriceText) {
+                           events[index].priceText = newPriceText;
+                           debouncedSaveState();
+                           renderEventsInPreview(); 
+                       }
                  } else if (field === 'date') {
-                    if (events[index][field] !== newValue) {
-                        events[index][field] = newValue;
-                        sortEvents();
-                        debouncedSaveState();
-                        renderEventsInPreview();
-                    }
+                     if (events[index][field] !== newValue) {
+                         events[index][field] = newValue;
+                         sortEvents();
+                         debouncedSaveState();
+                         renderEventsInPreview();
+                     }
                  }
                  else {
-                     if (events[index][field] !== newValue) {
-                        events[index][field] = newValue;
-                        debouncedSaveState();
-                     }
+                       if (events[index][field] !== newValue) {
+                           events[index][field] = newValue;
+                           debouncedSaveState();
+                       }
                  }
             }
         }
@@ -893,6 +1245,28 @@
                 e.target.blur();
             }
         }
+        
+        // --- Image processing function ---
+        async function getProcessedImage() {
+            if (!(settings.backgroundImage instanceof Blob)) {
+                return null;
+            }
+             if (settings.backgroundBlur === 0) {
+                return currentImageObjectUrl;
+            }
+
+            const imageBitmap = await createImageBitmap(settings.backgroundImage);
+            const canvas = document.createElement('canvas');
+            canvas.width = imageBitmap.width;
+            canvas.height = imageBitmap.height;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.filter = `blur(${settings.backgroundBlur}px)`;
+            ctx.drawImage(imageBitmap, 0, 0);
+            
+            return canvas.toDataURL();
+        }
+
 
         async function downloadImage() {
             if (events.length === 0) {
@@ -909,6 +1283,14 @@
             
             const eventsPerPage = parseInt(eventsPerPageInput.value, 10) || 9;
             const totalPages = Math.ceil(events.length / eventsPerPage);
+            
+            // Pre-process the image once if needed
+            let processedImageUrl = null;
+            if(settings.background === 'image' && settings.backgroundImage) {
+                loadingIndicator.textContent = `Processing background image...`;
+                processedImageUrl = await getProcessedImage();
+            }
+
 
             for (let i = 0; i < totalPages; i++) {
                 const page = i + 1;
@@ -917,15 +1299,16 @@
 
                 const posterClone = posterContent.cloneNode(true);
                 posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
+                
+                // Remove the CSS filter from the clone to prevent conflicts
+                const cloneBgImage = posterClone.querySelector('#poster-background-image');
+                cloneBgImage.style.filter = 'none';
 
-                // Apply size class to the clone for correct styling
-                if (settings.posterSize === '1080x1350') {
-                    posterClone.classList.remove('size-story');
-                    posterClone.classList.add('size-post');
-                } else {
-                    posterClone.classList.remove('size-post');
-                    posterClone.classList.add('size-story');
+                // Apply the pre-processed image to the clone
+                if (processedImageUrl) {
+                    cloneBgImage.style.backgroundImage = `url(${processedImageUrl})`;
                 }
+
 
                 const listInClone = posterClone.querySelector('.event-list-container');
                 listInClone.innerHTML = '';
@@ -950,9 +1333,6 @@
                 } else {
                     urlEl.style.display = 'none';
                 }
-
-                posterClone.querySelector('#preview-footer').textContent = settings.footer;
-
 
                 posterClone.style.position = 'absolute';
                 posterClone.style.top = '-9999px';
@@ -995,8 +1375,60 @@
             downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
         
+        // --- Text Style Editor Logic ---
+        function populateTextStyleEditor() {
+            const categoryKey = textStyleCategorySelect.value;
+            const styles = settings.textStyles[categoryKey];
+            if (!styles) return;
+
+            fontFamilySelect.value = styles.fontFamily;
+            textColorInput.value = styles.color;
+            getEl('font-size-input').value = styles.fontSize;
+            getEl('font-weight-input').value = styles.fontWeight;
+            getEl('stroke-color').value = styles.strokeColor;
+            getEl('stroke-width-input').value = styles.strokeWidth;
+            getEl('shadow-color').value = styles.shadowColor;
+            getEl('shadow-blur-input').value = styles.shadowBlur;
+            getEl('shadow-offset-x-input').value = styles.shadowOffsetX;
+            getEl('shadow-offset-y-input').value = styles.shadowOffsetY;
+            getEl('background-blur-input').value = settings.backgroundBlur;
+            getEl('overlay-opacity-input').value = Math.round(settings.overlayOpacity * 100);
+        }
+        
+        function handleTextStyleChange(property, value) {
+            const categoryKey = textStyleCategorySelect.value;
+            settings.textStyles[categoryKey][property] = value;
+            
+            // Update the preview immediately
+            updatePosterLook();
+            debouncedSaveState();
+        }
+
+        // Helper to link a slider, number input, and buttons
+        function setupNumericStepper(options) {
+            const { inputId, upId, downId, callback, isFloat = false, step = 1, min, max } = options;
+            const input = getEl(inputId);
+            const upBtn = getEl(upId);
+            const downBtn = getEl(downId);
+
+            const updateValue = (newValue) => {
+                let value = isFloat ? parseFloat(newValue) : parseInt(newValue, 10);
+                if (isNaN(value)) value = min !== undefined ? min : 0;
+                
+                if(min !== undefined) value = Math.max(min, value);
+                if(max !== undefined) value = Math.min(max, value);
+
+                input.value = isFloat ? value.toFixed(1) : value;
+                callback(value);
+            };
+
+            input.addEventListener('change', (e) => updateValue(e.target.value));
+            upBtn.addEventListener('click', () => updateValue(parseFloat(input.value) + step));
+            downBtn.addEventListener('click', () => updateValue(parseFloat(input.value) - step));
+        }
+
         // --- EVENT LISTENERS ---
-        function attachListeners() {
+        async function attachListeners() {
             // Initial Setup on Load
             datepickerInstance = new Datepicker(eventDateInput, {
                 format: 'dd/mm/yyyy',
@@ -1004,17 +1436,17 @@
                 buttonClass: 'btn'
             }); 
             
-            loadState();
+            await loadState();
             updateFormControls();
-            updatePreviewStyles();
+            updatePosterLook();
             renderEventsInPreview();
         
-            window.addEventListener('resize', updatePreviewSize); 
+            window.addEventListener('resize', debounce(updatePreviewSize, 100)); 
 
-            const debouncedUpdateStyles = debounce(updatePreviewStyles);
+            const debouncedUpdatePosterLook = debounce(updatePosterLook, 50);
 
-            // Customization listeners (from form inputs)
-            posterSizeSelect.addEventListener('change', e => { 
+            // General customization listeners
+            posterSizeSelect.addEventListener('change', async (e) => { 
                 settings.posterSize = e.target.value;
                 if (settings.posterSize === '1080x1350') {
                     settings.eventsPerPage = 5;
@@ -1022,42 +1454,86 @@
                     settings.eventsPerPage = 9;
                 }
                 updateFormControls();
-                updatePreviewStyles(); 
-                saveState();
+                updatePosterLook(); 
+                await saveState();
             });
             posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; previewTitle.textContent = e.target.value; debouncedSaveState(); });
             posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; previewSubtitle.textContent = e.target.value; debouncedSaveState(); });
-            posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePreviewStyles(); saveState(); });
+            posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePosterLook(); saveState(); });
             posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; previewFooter.textContent = e.target.value; debouncedSaveState(); });
             eventsPerPageInput.addEventListener('change', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
             showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
             showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
-            titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = e.target.value; fontSizeValueSpan.textContent = e.target.value; previewTitle.style.fontSize = `${e.target.value}px`; debouncedSaveState(); });
-            gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
-            gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
+            gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
+            gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
+
+            // Image background listeners
+            uploadImageBtn.addEventListener('click', () => backgroundImageInput.click());
+            backgroundImageInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
+                
+                settings.backgroundImage = file;
+                currentImageObjectUrl = URL.createObjectURL(file);
+                
+                updatePosterLook();
+                saveState();
+                backgroundImageInput.value = '';
+            });
+            removeImageBtn.addEventListener('click', () => {
+                if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
+                currentImageObjectUrl = null;
+                settings.backgroundImage = null;
+                updatePosterLook();
+                saveState();
+            });
+
 
             // Direct editing listeners
             posterContent.addEventListener('focusout', handleDirectEdit);
             posterContent.addEventListener('keydown', preventLineBreaks);
 
-            // Other event listeners
+            // Form listeners
             eventForm.addEventListener('submit', addEvent);
             isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
             isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
             eventPriceInput.addEventListener('input', () => togglePriceInput('input'));
             isDateTbaCheckbox.addEventListener('change', toggleDateInput);
 
+            // Button listeners
             downloadBtn.addEventListener('click', downloadImage);
             clearBtn.addEventListener('click', clearAllEvents);
-            sortBtn.addEventListener('click', () => {
+            sortBtn.addEventListener('click', async () => {
                 sortEvents();
-                saveState();
+                await saveState();
                 renderEventsInPreview();
             });
             previewListContainer.addEventListener('click', handleListInteraction);
             exportBtn.addEventListener('click', exportData);
             importBtn.addEventListener('click', () => importInput.click());
             importInput.addEventListener('change', importData);
+            
+            // Text Style Editor Listeners
+            textStyleCategorySelect.addEventListener('change', populateTextStyleEditor);
+
+            fontFamilySelect.addEventListener('change', e => handleTextStyleChange('fontFamily', e.target.value));
+            textColorInput.addEventListener('input', e => handleTextStyleChange('color', e.target.value));
+            
+            setupNumericStepper({ inputId: 'font-size-input', upId: 'font-size-up', downId: 'font-size-down', callback: (value) => handleTextStyleChange('fontSize', value), min: 1 });
+            setupNumericStepper({ inputId: 'font-weight-input', upId: 'font-weight-up', downId: 'font-weight-down', callback: (value) => handleTextStyleChange('fontWeight', value), step: 100, min: 100, max: 900 });
+            setupNumericStepper({ inputId: 'stroke-width-input', upId: 'stroke-width-up', downId: 'stroke-width-down', callback: (value) => handleTextStyleChange('strokeWidth', value), isFloat: true, step: 0.1, min: 0, max: 10 });
+            
+            getEl('stroke-color').addEventListener('input', e => handleTextStyleChange('strokeColor', e.target.value));
+            getEl('shadow-color').addEventListener('input', e => handleTextStyleChange('shadowColor', e.target.value));
+            
+            setupNumericStepper({ inputId: 'shadow-blur-input', upId: 'shadow-blur-up', downId: 'shadow-blur-down', callback: (value) => handleTextStyleChange('shadowBlur', value), min: 0, max: 50 });
+            setupNumericStepper({ inputId: 'shadow-offset-x-input', upId: 'shadow-offset-x-up', downId: 'shadow-offset-x-down', callback: (value) => handleTextStyleChange('shadowOffsetX', value), min: -50, max: 50 });
+            setupNumericStepper({ inputId: 'shadow-offset-y-input', upId: 'shadow-offset-y-up', downId: 'shadow-offset-y-down', callback: (value) => handleTextStyleChange('shadowOffsetY', value), min: -50, max: 50 });
+
+            setupNumericStepper({ inputId: 'background-blur-input', upId: 'background-blur-up', downId: 'background-blur-down', callback: (value) => { settings.backgroundBlur = value; updatePosterLook(); debouncedSaveState(); }, min: 0, max: 50 });
+            setupNumericStepper({ inputId: 'overlay-opacity-input', upId: 'overlay-opacity-up', downId: 'overlay-opacity-down', callback: (value) => { settings.overlayOpacity = value / 100; updatePosterLook(); debouncedSaveState(); }, min: 0, max: 100 });
         }
 
         document.addEventListener('DOMContentLoaded', attachListeners);
