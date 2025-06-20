@@ -45,8 +45,13 @@
             height: 1350px;
             padding: 64px;
         }
+        
+        #poster-content.size-post #poster-header {
+             margin-top: 24px; /* Added margin to push title down */
+        }
+
         #poster-content.size-post .event-list-container {
-            height: 900px; /* Gives space for header and footer */
+            height: 850px; /* Adjusted height to compensate for header margin */
             flex-grow: 0;
             flex-shrink: 0;
             border-top: 2px solid rgba(255,255,255,0.15);
