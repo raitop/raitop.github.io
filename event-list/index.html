@@ -138,7 +138,7 @@
     <div class="container mx-auto p-4 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold tracking-tight">Social Media Event Poster Generator</h1>
-            <p class="text-gray-400 mt-2">Add events and download your poster. Your list is saved in your browser.</p>
+            <p class="text-gray-400 mt-2 max-w-3xl mx-auto">Create your event poster by adding events and customizing the design. You can edit text directly on the preview. If your list is too long, multiple images will be generated automatically. Your work is saved in your browser.</p>
         </header>
         
         <input type="file" id="import-input" class="hidden" accept=".json">
@@ -231,8 +231,9 @@
                         <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                     </div>
                     <div>
-                        <label for="title-font-size" class="block text-sm font-medium text-gray-300">Title Font Size: <span id="font-size-value">144</span>px</label>
-                        <input type="range" id="title-font-size" min="80" max="200" value="144" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <label for="title-font-size" class="block text-sm font-medium text-gray-300">Title Font Size: <span id="font-size-value">98</span>px</label>
+                        <input type="range" id="title-font-size" min="80" max="200" value="98" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <p id="font-size-recommendation" class="text-xs text-gray-500 mt-1"></p>
                     </div>
                     <div>
                         <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle</label>
@@ -266,8 +267,8 @@
                     </div>
                      <div>
                         <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
-                        <input type="number" id="events-per-page" name="events-per-page" value="9" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                        <p class="text-xs text-gray-500 mt-1">Recommended: 5-9 events per image.</p>
+                        <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
                     </div>
                     <div class="flex items-center">
                         <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
@@ -367,6 +368,8 @@
         const showUrlCheckbox = getEl('show-url');
         const titleFontSizeSlider = getEl('title-font-size');
         const fontSizeValueSpan = getEl('font-size-value');
+        const fontSizeRecommendation = getEl('font-size-recommendation');
+        const eventsPerPageRecommendation = getEl('events-per-page-recommendation');
         const customGradientControls = getEl('custom-gradient-controls');
         const gradientStartColorInput = getEl('gradient-start-color');
         const gradientEndColorInput = getEl('gradient-end-color');
@@ -417,7 +420,7 @@
             "eventsPerPage": 9,
             "showTimestamp": true,
             "showUrl": false,
-            "titleFontSize": "144",
+            "titleFontSize": "98",
             "posterSize": "1080x1920",
             "customGradient": { "start": "#1f2937", "end": "#111827" }
         };
@@ -594,6 +597,16 @@
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
         }
+        
+        function updateDynamicRecommendations() {
+             if (settings.posterSize === '1080x1350') {
+                eventsPerPageRecommendation.textContent = 'Recommended: 5 for 4:5 size.';
+                fontSizeRecommendation.textContent = 'Recommended: 98px for 4:5 size.';
+            } else {
+                eventsPerPageRecommendation.textContent = 'Recommended: 9 for Story size.';
+                fontSizeRecommendation.textContent = ''; // No recommendation for story size
+            }
+        }
 
         function updatePreviewStyles() {
             // Update size-related classes
@@ -605,6 +618,7 @@
                 posterContent.classList.add('size-story');
             }
             updatePreviewSize();
+            updateDynamicRecommendations();
 
             // Update text and other styles
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
@@ -947,6 +961,12 @@
             // Customization listeners (from form inputs)
             posterSizeSelect.addEventListener('change', e => { 
                 settings.posterSize = e.target.value;
+                if (settings.posterSize === '1080x1350') {
+                    settings.eventsPerPage = 5;
+                } else {
+                    settings.eventsPerPage = 9;
+                }
+                updateFormControls();
                 updatePreviewStyles(); 
                 saveState();
             });
