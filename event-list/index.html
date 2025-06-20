@@ -23,10 +23,42 @@
         /* The container that will be captured */
         #poster-content {
             width: 1080px;
-            height: 1920px;
             background-size: cover;
             background-position: center;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
         }
+
+        /* Default Story Size (1080x1920) */
+        #poster-content.size-story {
+            height: 1920px;
+            padding: 96px;
+        }
+        #poster-content.size-story .event-list-container {
+             flex-grow: 1;
+        }
+
+        /* Post Size (1080x1350) */
+        #poster-content.size-post {
+            height: 1350px;
+            padding: 64px;
+        }
+        #poster-content.size-post .event-list-container {
+            height: 900px; /* Gives space for header and footer */
+            flex-grow: 0;
+            flex-shrink: 0;
+            border-top: 2px solid rgba(255,255,255,0.15);
+            border-bottom: 2px solid rgba(255,255,255,0.15);
+            margin: 32px 0;
+            padding-top: 32px;
+            padding-bottom: 32px;
+        }
+         #poster-content.size-post #poster-footer-wrapper {
+            margin-top: 0; /* Override default margin */
+         }
+
 
         /* Styling for the scrollbar for better aesthetics and readability */
         .event-list-container::-webkit-scrollbar {
@@ -159,21 +191,21 @@
             <div class="lg:col-span-1 flex-1 flex flex-col items-center">
                 <h2 class="text-2xl font-bold mb-4 text-center">Poster Preview</h2>
                 <!-- Container for the scaled preview. It sets the size and clips. -->
-                <div id="preview-wrapper" class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900" style="aspect-ratio: 1080 / 1920;">
+                <div id="preview-wrapper" class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900">
                     <!-- This div is scaled by JavaScript to fit the container above -->
                     <div id="poster-scaler" class="origin-top-left">
                         <!-- The actual poster content that will be rendered -->
-                        <div id="poster-content" class="text-white flex flex-col p-24 relative overflow-hidden">
+                        <div id="poster-content" class="text-white">
                             <div id="poster-background-overlay" class="absolute inset-0 z-0"></div>
-                            <header class="text-center relative z-10">
+                            <header id="poster-header" class="text-center relative z-10 flex-shrink-0">
                                 <h1 id="preview-title" class="font-black tracking-tighter uppercase" contenteditable="true" data-setting="title"></h1>
                                 <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2" contenteditable="true" data-setting="subtitle"></p>
                             </header>
                             <!-- Using class instead of ID for safer cloning -->
-                            <main class="event-list-container flex-grow overflow-y-auto py-12 -mx-4 px-4 relative z-10">
+                            <main class="event-list-container overflow-y-auto py-8 px-4 relative z-10">
                                 <!-- Events will be dynamically inserted here -->
                             </main>
-                            <div class="mt-auto pt-4 relative z-10">
+                            <div id="poster-footer-wrapper" class="mt-auto pt-4 relative z-10 flex-shrink-0">
                                 <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
                                 <footer id="preview-footer" class="text-center text-gray-500 text-2xl" contenteditable="true" data-setting="footer"></footer>
                                 <p id="preview-url" class="text-center text-gray-600 text-lg mt-1"></p>
@@ -187,6 +219,13 @@
             <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg">
                 <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Poster Customization</h2>
                 <div class="space-y-4">
+                    <div>
+                        <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
+                        <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <option value="1080x1920">1080 x 1920 (Story)</option>
+                            <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
+                        </select>
+                    </div>
                     <div>
                         <label for="poster-title" class="block text-sm font-medium text-gray-300">Title</label>
                         <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
@@ -318,6 +357,7 @@
         const eventPriceInput = getEl('event-price');
         const isFreeCheckbox = getEl('is-free');
         const isTbaCheckbox = getEl('is-tba');
+        const posterSizeSelect = getEl('poster-size');
         const posterTitleInput = getEl('poster-title');
         const posterSubtitleInput = getEl('poster-subtitle');
         const posterBackgroundSelect = getEl('poster-background');
@@ -378,6 +418,7 @@
             "showTimestamp": true,
             "showUrl": false,
             "titleFontSize": "144",
+            "posterSize": "1080x1920",
             "customGradient": { "start": "#1f2937", "end": "#111827" }
         };
 
@@ -471,8 +512,10 @@
         // --- DYNAMIC PREVIEW SIZING ---
         function updatePreviewSize() {
             if (!previewWrapper || !posterScaler) return;
+            const [width, height] = settings.posterSize.split('x').map(Number);
+            previewWrapper.style.aspectRatio = `${width} / ${height}`;
             const containerWidth = previewWrapper.offsetWidth;
-            const scale = containerWidth / 1080;
+            const scale = containerWidth / width;
             posterScaler.style.transform = `scale(${scale})`;
         }
 
@@ -538,6 +581,7 @@
         };
 
         function updateFormControls() {
+            posterSizeSelect.value = settings.posterSize;
             posterTitleInput.value = settings.title;
             posterSubtitleInput.value = settings.subtitle;
             posterBackgroundSelect.value = settings.background;
@@ -552,6 +596,17 @@
         }
 
         function updatePreviewStyles() {
+            // Update size-related classes
+            if (settings.posterSize === '1080x1350') {
+                posterContent.classList.remove('size-story');
+                posterContent.classList.add('size-post');
+            } else {
+                posterContent.classList.remove('size-post');
+                posterContent.classList.add('size-story');
+            }
+            updatePreviewSize();
+
+            // Update text and other styles
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
@@ -781,7 +836,8 @@
             downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
             const delay = ms => new Promise(res => setTimeout(res, ms));
-
+            const [width, height] = settings.posterSize.split('x').map(Number);
+            
             const eventsPerPage = parseInt(eventsPerPageInput.value, 10) || 9;
             const totalPages = Math.ceil(events.length / eventsPerPage);
 
@@ -793,18 +849,14 @@
                 const posterClone = posterContent.cloneNode(true);
                 posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
 
-                const titleEl = posterClone.querySelector('#preview-title');
-                titleEl.textContent = settings.title;
-                titleEl.style.fontSize = `${settings.titleFontSize}px`;
-                
-                posterClone.querySelector('#preview-subtitle').textContent = settings.subtitle;
-                
-                const overlayEl = posterClone.querySelector('#poster-background-overlay');
-                 if(settings.background === 'custom') {
-                     overlayEl.style.backgroundImage = `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`;
-                 } else {
-                     overlayEl.style.backgroundImage = gradients[settings.background];
-                 }
+                // Apply size class to the clone for correct styling
+                if (settings.posterSize === '1080x1350') {
+                    posterClone.classList.remove('size-story');
+                    posterClone.classList.add('size-post');
+                } else {
+                    posterClone.classList.remove('size-post');
+                    posterClone.classList.add('size-story');
+                }
 
                 const listInClone = posterClone.querySelector('.event-list-container');
                 listInClone.innerHTML = '';
@@ -847,10 +899,10 @@
                         useCORS: true,
                         logging: false,
                         backgroundColor: null, 
-                        width: 1080,
-                        height: 1920,
-                        windowWidth: 1080,
-                        windowHeight: 1920
+                        width: width,
+                        height: height,
+                        windowWidth: width,
+                        windowHeight: height
                     });
 
                     const link = document.createElement('a');
@@ -883,17 +935,21 @@
                 buttonClass: 'btn'
             }); 
             
-            loadState(); // Load from localStorage if available
+            loadState();
             updateFormControls();
             updatePreviewStyles();
             renderEventsInPreview();
-            updatePreviewSize(); 
         
             window.addEventListener('resize', updatePreviewSize); 
 
             const debouncedUpdateStyles = debounce(updatePreviewStyles);
 
             // Customization listeners (from form inputs)
+            posterSizeSelect.addEventListener('change', e => { 
+                settings.posterSize = e.target.value;
+                updatePreviewStyles(); 
+                saveState();
+            });
             posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; previewTitle.textContent = e.target.value; debouncedSaveState(); });
             posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; previewSubtitle.textContent = e.target.value; debouncedSaveState(); });
             posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePreviewStyles(); saveState(); });
