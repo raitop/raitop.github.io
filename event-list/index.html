@@ -90,36 +90,38 @@
             display: none;
         }
         
-        /* Custom styles for the datepicker */
+        /* Enforce light theme for datepicker */
+        .datepicker {
+            background-color: #fff !important;
+        }
         .datepicker-picker {
-            background-color: #374151; /* gray-700 */
+            background-color: #f9fafb; /* gray-50 */
             border-radius: 1rem;
-            border: 1px solid #4b5563; /* gray-600 */
+            border: 1px solid #d1d5db; /* gray-300 */
         }
         .datepicker-picker span {
-             color: #d1d5db; /* gray-300 */
+             color: #111827; /* gray-900 */
         }
         .datepicker-picker .datepicker-cell:not(.disabled):hover, .datepicker-picker .datepicker-cell.focused:not(.selected) {
-            background-color: #4b5563; /* gray-600 */
+            background-color: #e5e7eb; /* gray-200 */
         }
         .datepicker-picker .datepicker-cell.selected, .datepicker-picker .datepicker-cell.selected:hover {
              background-color: #4f46e5; /* indigo-600 */
              color: #fff;
         }
         .datepicker-picker .datepicker-cell.today:not(.selected){
-            background-color: #374151;
-            border: 1px solid #9ca3af;
+            background-color: #fff;
+            border: 1px solid #4f46e5;
         }
         .datepicker-controls {
-            background-color: #4b5563; /* gray-600 */
+            background-color: #fff;
         }
         .datepicker-controls .btn {
-            color: #d1d5db !important; /* gray-300 */
-            text-transform: uppercase;
+            color: #374151 !important; /* gray-700 */
             font-weight: bold;
         }
         .datepicker-controls .btn:hover {
-             background-color: #374151 !important; /* gray-700 */
+             background-color: #e5e7eb !important; /* gray-200 */
         }
         
         .action-buttons button:disabled {
@@ -230,16 +232,16 @@
                             <div id="poster-background-overlay" class="absolute inset-0 z-0"></div>
                             <header id="poster-header" class="text-center relative z-10 flex-shrink-0">
                                 <h1 id="preview-title" class="font-black tracking-tighter uppercase" contenteditable="true" data-setting="title"></h1>
-                                <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2" contenteditable="true" data-setting="subtitle"></p>
+                                <p id="preview-subtitle" class="text-5xl mt-2" contenteditable="true" data-setting="subtitle"></p>
                             </header>
                             <!-- Using class instead of ID for safer cloning -->
                             <main class="event-list-container overflow-y-auto py-8 px-4 relative z-10">
                                 <!-- Events will be dynamically inserted here -->
                             </main>
                             <div id="poster-footer-wrapper" class="mt-auto pt-4 relative z-10 flex-shrink-0">
-                                <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
-                                <footer id="preview-footer" class="text-center text-gray-500 text-2xl" contenteditable="true" data-setting="footer"></footer>
-                                <p id="preview-url" class="text-center text-gray-600 text-lg mt-1"></p>
+                                <p id="preview-timestamp" class="text-center text-xl mb-2"></p>
+                                <footer id="preview-footer" class="text-2xl" contenteditable="true" data-setting="footer"></footer>
+                                <p id="preview-url" class="text-lg mt-1"></p>
                             </div>
                         </div>
                     </div>
@@ -250,84 +252,126 @@
             <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg">
                 <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Poster Customization</h2>
                 <div class="space-y-4">
-                    <div>
-                        <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
-                        <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                            <option value="1080x1920">1080 x 1920 (Story)</option>
-                            <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="poster-title" class="block text-sm font-medium text-gray-300">Title</label>
-                        <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                    </div>
-                    <div>
-                        <label for="title-font-size" class="block text-sm font-medium text-gray-300">Title Font Size: <span id="font-size-value">98</span>px</label>
-                        <input type="range" id="title-font-size" min="80" max="200" value="98" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
-                        <p id="font-size-recommendation" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <div>
-                        <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle</label>
-                        <input type="text" id="poster-subtitle" name="poster-subtitle" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                    </div>
-                    <div>
-                        <label for="poster-background" class="block text-sm font-medium text-gray-300">Background Preset</label>
-                        <select id="poster-background" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                            <option value="deep-space">Deep Space (Default)</option>
-                            <option value="sunset">Sunset</option>
-                            <option value="oceanic">Oceanic</option>
-                            <option value="minty">Minty</option>
-                            <option value="royal">Royal</option>
-                            <option value="gotham">Gotham</option>
-                            <option value="custom">Custom Gradient</option>
-                        </select>
-                    </div>
-                    <div id="custom-gradient-controls" class="hidden space-y-2">
-                        <div class="flex items-center gap-4">
-                            <label for="gradient-start-color" class="text-sm font-medium text-gray-300">Start</label>
-                            <input type="color" id="gradient-start-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+                    <!-- General Settings -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold">General</h3>
+                         <div>
+                            <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
+                            <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                <option value="1080x1920">1080 x 1920 (Story)</option>
+                                <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
+                            </select>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <label for="gradient-end-color" class="text-sm font-medium text-gray-300">End</label>
-                             <input type="color" id="gradient-end-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+                        <div>
+                            <label for="poster-background" class="block text-sm font-medium text-gray-300">Background Preset</label>
+                            <select id="poster-background" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                <option value="deep-space">Deep Space (Default)</option>
+                                <option value="sunset">Sunset</option>
+                                <option value="oceanic">Oceanic</option>
+                                <option value="minty">Minty</option>
+                                <option value="royal">Royal</option>
+                                <option value="gotham">Gotham</option>
+                                <option value="custom">Custom Gradient</option>
+                            </select>
+                        </div>
+                        <div id="custom-gradient-controls" class="hidden space-y-2">
+                            <div class="flex items-center gap-4">
+                                <label for="gradient-start-color" class="text-sm font-medium text-gray-300">Start</label>
+                                <input type="color" id="gradient-start-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <label for="gradient-end-color" class="text-sm font-medium text-gray-300">End</label>
+                                 <input type="color" id="gradient-end-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Controls -->
+                     <div class="border-t border-gray-700 pt-4 space-y-4">
+                        <h3 class="text-lg font-bold">Content</h3>
+                         <div>
+                            <label for="poster-title" class="block text-sm font-medium text-gray-300">Title</label>
+                            <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        </div>
+                        <div>
+                            <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle</label>
+                            <input type="text" id="poster-subtitle" name="poster-subtitle" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                        </div>
+                        <div>
+                            <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
+                            <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                         </div>
                     </div>
                     
                     <!-- Text Style Controls -->
-                    <div class="border-t border-gray-700 pt-4">
-                         <h3 class="text-lg font-bold mb-2">Text Style</h3>
-                         <div class="space-y-4">
+                    <div class="border-t border-gray-700 pt-4 space-y-4">
+                         <h3 class="text-lg font-bold">Text Style</h3>
+                         <div class="grid grid-cols-2 gap-4">
                              <div>
-                                 <label for="text-color" class="block text-sm font-medium text-gray-300">Text Color</label>
-                                 <input type="color" id="text-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
+                                 <label for="title-text-color" class="block text-sm font-medium text-gray-300">Title Color</label>
+                                 <input type="color" id="title-text-color" class="mt-1 p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
                              </div>
                               <div>
-                                 <label for="text-effect" class="block text-sm font-medium text-gray-300">Text Effect</label>
-                                 <select id="text-effect" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                                     <option value="none">None</option>
-                                     <option value="shadow">Shadow</option>
-                                     <option value="glow">Glow</option>
-                                 </select>
+                                 <label for="subtitle-text-color" class="block text-sm font-medium text-gray-300">Subtitle Color</label>
+                                 <input type="color" id="subtitle-text-color" class="mt-1 p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
+                             </div>
+                             <div>
+                                 <label for="list-text-color" class="block text-sm font-medium text-gray-300">List Text Color</label>
+                                 <input type="color" id="list-text-color" class="mt-1 p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
+                             </div>
+                             <div>
+                                 <label for="footer-text-color" class="block text-sm font-medium text-gray-300">Footer Color</label>
+                                 <input type="color" id="footer-text-color" class="mt-1 p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
                              </div>
                          </div>
+                         <div class="flex items-center">
+                            <input id="enable-text-effects" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                            <label for="enable-text-effects" class="ml-2 block text-sm text-gray-300">Enable Advanced Text Effects</label>
+                         </div>
+                         <div id="advanced-text-effects" class="hidden">
+                             <label for="text-effect" class="block text-sm font-medium text-gray-300">Text Effect</label>
+                             <select id="text-effect" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                 <option value="none">None</option>
+                                 <option value="shadow">Shadow</option>
+                                 <option value="glow">Glow</option>
+                             </select>
+                         </div>
+                    </div>
+                    
+                    <!-- Font Size Controls -->
+                    <div class="border-t border-gray-700 pt-4 space-y-4">
+                         <h3 class="text-lg font-bold">Font Sizes</h3>
+                         <div>
+                            <label for="title-font-size" class="block text-sm font-medium text-gray-300">Title Font Size: <span id="font-size-value">98</span>px</label>
+                            <input type="range" id="title-font-size" min="80" max="200" value="98" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            <p id="font-size-recommendation" class="text-xs text-gray-500 mt-1"></p>
+                        </div>
+                        <div>
+                            <label for="list-name-font-size" class="block text-sm font-medium text-gray-300">Event Name Size: <span id="list-name-font-size-value">54</span>px</label>
+                            <input type="range" id="list-name-font-size" min="30" max="80" value="54" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div>
+                            <label for="list-details-font-size" class="block text-sm font-medium text-gray-300">Event Details Size: <span id="list-details-font-size-value">36</span>px</label>
+                            <input type="range" id="list-details-font-size" min="20" max="50" value="36" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
                     </div>
 
-                     <div class="border-t border-gray-700 pt-4">
-                        <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
-                        <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                    </div>
-                     <div>
-                        <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
-                        <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
-                        <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <div class="flex items-center">
-                        <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                        <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
-                    </div>
-                     <div class="flex items-center">
-                        <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                        <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
+
+                     <div class="border-t border-gray-700 pt-4 space-y-4">
+                         <h3 class="text-lg font-bold">Misc</h3>
+                         <div>
+                            <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
+                            <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
+                         </div>
+                         <div class="flex items-center">
+                            <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                            <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
+                        </div>
+                         <div class="flex items-center">
+                            <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
+                            <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -418,14 +462,28 @@
         const eventsPerPageInput = getEl('events-per-page');
         const showTimestampCheckbox = getEl('show-timestamp');
         const showUrlCheckbox = getEl('show-url');
+        
         const titleFontSizeSlider = getEl('title-font-size');
         const fontSizeValueSpan = getEl('font-size-value');
         const fontSizeRecommendation = getEl('font-size-recommendation');
+        
+        const listNameFontSizeSlider = getEl('list-name-font-size');
+        const listNameFontSizeValue = getEl('list-name-font-size-value');
+        const listDetailsFontSizeSlider = getEl('list-details-font-size');
+        const listDetailsFontSizeValue = getEl('list-details-font-size-value');
+
         const eventsPerPageRecommendation = getEl('events-per-page-recommendation');
         const customGradientControls = getEl('custom-gradient-controls');
         const gradientStartColorInput = getEl('gradient-start-color');
         const gradientEndColorInput = getEl('gradient-end-color');
-        const textColorInput = getEl('text-color');
+        
+        const titleTextColorInput = getEl('title-text-color');
+        const subtitleTextColorInput = getEl('subtitle-text-color');
+        const listTextColorInput = getEl('list-text-color');
+        const footerTextColorInput = getEl('footer-text-color');
+
+        const enableTextEffectsCheckbox = getEl('enable-text-effects');
+        const advancedTextEffectsContainer = getEl('advanced-text-effects');
         const textEffectSelect = getEl('text-effect');
         
         // Buttons & Indicators
@@ -479,6 +537,13 @@
             "titleFontSize": "98",
             "posterSize": "1080x1920",
             "textColor": "#ffffff",
+            "titleTextColor": "#ffffff",
+            "subtitleTextColor": "#d1d5db",
+            "listTextColor": "#ffffff",
+            "footerTextColor": "#9ca3af",
+            "listNameFontSize": "54",
+            "listDetailsFontSize": "36",
+            "enableTextEffects": false,
             "textEffect": "none",
             "customGradient": { "start": "#1f2937", "end": "#111827" }
         };
@@ -605,10 +670,10 @@
             
             eventElement.innerHTML = `
                 <div class="flex justify-between items-start gap-4">
-                    <h3 class="text-5xl font-bold text-white break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
-                    <p class="text-4xl font-bold ${priceColor} mt-1 flex-shrink-0 pl-4" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
+                    <h3 class="event-name-text font-bold break-words min-w-0" style="font-size: ${settings.listNameFontSize}px;" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
+                    <p class="mt-1 flex-shrink-0 pl-4 ${priceColor}" style="font-size: ${settings.listNameFontSize * 0.8}px; font-weight: bold;" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
                 </div>
-                <div class="mt-4 text-3xl text-gray-300">
+                <div class="event-details-text mt-2" style="font-size: ${settings.listDetailsFontSize}px;">
                     <div class="flex flex-wrap items-center gap-x-4">
                         <span contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
                         <span class="text-gray-500">|</span>
@@ -650,10 +715,23 @@
             eventsPerPageInput.value = settings.eventsPerPage;
             showTimestampCheckbox.checked = settings.showTimestamp;
             showUrlCheckbox.checked = settings.showUrl;
+            
             titleFontSizeSlider.value = settings.titleFontSize;
             fontSizeValueSpan.textContent = settings.titleFontSize;
-            textColorInput.value = settings.textColor;
+            listNameFontSizeSlider.value = settings.listNameFontSize;
+            listNameFontSizeValue.textContent = settings.listNameFontSize;
+            listDetailsFontSizeSlider.value = settings.listDetailsFontSize;
+            listDetailsFontSizeValue.textContent = settings.listDetailsFontSize;
+
+            titleTextColorInput.value = settings.titleTextColor;
+            subtitleTextColorInput.value = settings.subtitleTextColor;
+            listTextColorInput.value = settings.listTextColor;
+            footerTextColorInput.value = settings.footerTextColor;
+            
+            enableTextEffectsCheckbox.checked = settings.enableTextEffects;
+            advancedTextEffectsContainer.style.display = settings.enableTextEffects ? 'block' : 'none';
             textEffectSelect.value = settings.textEffect;
+
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
         }
@@ -684,11 +762,16 @@
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
-            posterContent.style.color = settings.textColor;
+
+            // Apply individual text colors
+            previewTitle.style.color = settings.titleTextColor;
+            previewSubtitle.style.color = settings.subtitleTextColor;
+            previewListContainer.style.color = settings.listTextColor;
+            previewFooter.style.color = settings.footerTextColor;
             
             // Handle text effects
             posterContent.classList.remove('text-effect-shadow', 'text-effect-glow');
-            if(settings.textEffect !== 'none') {
+            if(settings.enableTextEffects && settings.textEffect !== 'none') {
                 posterContent.classList.add(`text-effect-${settings.textEffect}`);
             }
             
@@ -711,8 +794,11 @@
         }
         
         const parseDate = (dateStr) => {
-            if (dateStr.toUpperCase() === 'TBA') return null; // Handle TBA dates
-            const [day, month, year] = dateStr.split('/');
+            if (!dateStr || dateStr.toUpperCase() === 'TBA') return null; // Handle TBA dates
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return null;
+            const [day, month, year] = parts.map(Number);
+            if(isNaN(day) || isNaN(month) || isNaN(year)) return null;
             return new Date(year, month - 1, day);
         };
         
@@ -911,8 +997,8 @@
                  } else if (field === 'date') {
                     if (events[index][field] !== newValue) {
                         events[index][field] = newValue;
-                        debouncedSaveState();
                         sortEvents();
+                        debouncedSaveState();
                         renderEventsInPreview();
                     }
                  }
@@ -1071,9 +1157,22 @@
             showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
             showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
             titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = e.target.value; fontSizeValueSpan.textContent = e.target.value; previewTitle.style.fontSize = `${e.target.value}px`; debouncedSaveState(); });
+            listNameFontSizeSlider.addEventListener('input', e => { settings.listNameFontSize = e.target.value; listNameFontSizeValue.textContent = e.target.value; renderEventsInPreview(); debouncedSaveState(); });
+            listDetailsFontSizeSlider.addEventListener('input', e => { settings.listDetailsFontSize = e.target.value; listDetailsFontSizeValue.textContent = e.target.value; renderEventsInPreview(); debouncedSaveState(); });
             gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
             gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
-            textColorInput.addEventListener('input', e => { settings.textColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+            
+            titleTextColorInput.addEventListener('input', e => { settings.titleTextColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+            subtitleTextColorInput.addEventListener('input', e => { settings.subtitleTextColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+            listTextColorInput.addEventListener('input', e => { settings.listTextColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+            footerTextColorInput.addEventListener('input', e => { settings.footerTextColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+
+            enableTextEffectsCheckbox.addEventListener('change', e => {
+                settings.enableTextEffects = e.target.checked;
+                advancedTextEffectsContainer.style.display = settings.enableTextEffects ? 'block' : 'none';
+                updatePreviewStyles();
+                saveState();
+            });
             textEffectSelect.addEventListener('change', e => { settings.textEffect = e.target.value; updatePreviewStyles(); saveState(); });
 
             // Direct editing listeners
