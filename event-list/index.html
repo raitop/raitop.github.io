@@ -29,6 +29,7 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            transition: color 0.3s ease;
         }
 
         /* Default Story Size (1080x1920) */
@@ -109,13 +110,16 @@
             background-color: #374151;
             border: 1px solid #9ca3af;
         }
+        .datepicker-controls {
+            background-color: #4b5563; /* gray-600 */
+        }
         .datepicker-controls .btn {
             color: #d1d5db !important; /* gray-300 */
             text-transform: uppercase;
             font-weight: bold;
         }
         .datepicker-controls .btn:hover {
-             background-color: #4b5563 !important; /* gray-600 */
+             background-color: #374151 !important; /* gray-700 */
         }
         
         .action-buttons button:disabled {
@@ -142,6 +146,14 @@
         #status-message.visible {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        /* Text Effects */
+        .text-effect-shadow {
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        .text-effect-glow {
+             text-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
     </style>
@@ -280,7 +292,27 @@
                              <input type="color" id="gradient-end-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none">
                         </div>
                     </div>
-                     <div>
+                    
+                    <!-- Text Style Controls -->
+                    <div class="border-t border-gray-700 pt-4">
+                         <h3 class="text-lg font-bold mb-2">Text Style</h3>
+                         <div class="space-y-4">
+                             <div>
+                                 <label for="text-color" class="block text-sm font-medium text-gray-300">Text Color</label>
+                                 <input type="color" id="text-color" class="p-1 h-10 w-full block bg-gray-700 border-gray-600 cursor-pointer rounded-lg">
+                             </div>
+                              <div>
+                                 <label for="text-effect" class="block text-sm font-medium text-gray-300">Text Effect</label>
+                                 <select id="text-effect" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                                     <option value="none">None</option>
+                                     <option value="shadow">Shadow</option>
+                                     <option value="glow">Glow</option>
+                                 </select>
+                             </div>
+                         </div>
+                    </div>
+
+                     <div class="border-t border-gray-700 pt-4">
                         <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
                         <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                     </div>
@@ -393,6 +425,8 @@
         const customGradientControls = getEl('custom-gradient-controls');
         const gradientStartColorInput = getEl('gradient-start-color');
         const gradientEndColorInput = getEl('gradient-end-color');
+        const textColorInput = getEl('text-color');
+        const textEffectSelect = getEl('text-effect');
         
         // Buttons & Indicators
         const downloadBtn = getEl('download-btn');
@@ -431,7 +465,7 @@
             { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
             { "name": "Genshiken ITB", "date": "05/07/2025", "location": "Aula Timur ITB", "socialMedia": "@genshikenitb", "priceText": "TBA", "isFree": false },
             { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
-            { "name": "Festival Axia: KomyuDoujin", "date": "06/09/2025", "location": "TBA", "socialMedia": "@festival.axia", "priceText": "TBA", "isFree": false }
+            { "name": "Festival Axia: KomyuDoujin", "date": "TBA", "location": "TBA", "socialMedia": "@festival.axia", "priceText": "TBA", "isFree": false }
         ];
         
         let settings = {
@@ -444,6 +478,8 @@
             "showUrl": false,
             "titleFontSize": "98",
             "posterSize": "1080x1920",
+            "textColor": "#ffffff",
+            "textEffect": "none",
             "customGradient": { "start": "#1f2937", "end": "#111827" }
         };
 
@@ -574,7 +610,7 @@
                 </div>
                 <div class="mt-4 text-3xl text-gray-300">
                     <div class="flex flex-wrap items-center gap-x-4">
-                        <span>${event.date}</span>
+                        <span contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
                         <span class="text-gray-500">|</span>
                         <span contenteditable="true" data-index="${index}" data-field="location">${event.location}</span>
                         ${event.socialMedia ? `<span class="text-gray-500">|</span><span contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
@@ -616,6 +652,8 @@
             showUrlCheckbox.checked = settings.showUrl;
             titleFontSizeSlider.value = settings.titleFontSize;
             fontSizeValueSpan.textContent = settings.titleFontSize;
+            textColorInput.value = settings.textColor;
+            textEffectSelect.value = settings.textEffect;
             gradientStartColorInput.value = settings.customGradient.start;
             gradientEndColorInput.value = settings.customGradient.end;
         }
@@ -646,6 +684,13 @@
             previewTitle.style.fontSize = `${settings.titleFontSize}px`;
             previewTitle.textContent = settings.title;
             previewSubtitle.textContent = settings.subtitle;
+            posterContent.style.color = settings.textColor;
+            
+            // Handle text effects
+            posterContent.classList.remove('text-effect-shadow', 'text-effect-glow');
+            if(settings.textEffect !== 'none') {
+                posterContent.classList.add(`text-effect-${settings.textEffect}`);
+            }
             
             if(settings.background === 'custom') {
                 posterBackgroundOverlay.style.backgroundImage = `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`;
@@ -666,6 +711,7 @@
         }
         
         const parseDate = (dateStr) => {
+            if (dateStr.toUpperCase() === 'TBA') return null; // Handle TBA dates
             const [day, month, year] = dateStr.split('/');
             return new Date(year, month - 1, day);
         };
@@ -674,6 +720,11 @@
             events.sort((a, b) => {
                 const dateA = parseDate(a.date);
                 const dateB = parseDate(b.date);
+
+                if (dateA === null && dateB === null) return 0; // Both are TBA
+                if (dateA === null) return 1; // a is TBA, put it last
+                if (dateB === null) return -1; // b is TBA, put it last
+
                 return dateA - dateB;
             });
         };
@@ -857,7 +908,15 @@
                         debouncedSaveState();
                         renderEventsInPreview(); 
                      }
-                 } else {
+                 } else if (field === 'date') {
+                    if (events[index][field] !== newValue) {
+                        events[index][field] = newValue;
+                        debouncedSaveState();
+                        sortEvents();
+                        renderEventsInPreview();
+                    }
+                 }
+                 else {
                      if (events[index][field] !== newValue) {
                         events[index][field] = newValue;
                         debouncedSaveState();
@@ -1014,6 +1073,8 @@
             titleFontSizeSlider.addEventListener('input', e => { settings.titleFontSize = e.target.value; fontSizeValueSpan.textContent = e.target.value; previewTitle.style.fontSize = `${e.target.value}px`; debouncedSaveState(); });
             gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
             gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdateStyles(); debouncedSaveState(); });
+            textColorInput.addEventListener('input', e => { settings.textColor = e.target.value; updatePreviewStyles(); debouncedSaveState(); });
+            textEffectSelect.addEventListener('change', e => { settings.textEffect = e.target.value; updatePreviewStyles(); saveState(); });
 
             // Direct editing listeners
             posterContent.addEventListener('focusout', handleDirectEdit);
