@@ -88,6 +88,7 @@
         .html2canvas-container .action-buttons {
             display: none;
         }
+        
         /* Custom styles for the datepicker */
         .datepicker-picker {
             background-color: #374151; /* gray-700 */
@@ -97,21 +98,26 @@
         .datepicker-picker span {
              color: #d1d5db; /* gray-300 */
         }
-        .datepicker-picker .datepicker-cell:not(.disabled):hover {
+        .datepicker-picker .datepicker-cell:not(.disabled):hover, .datepicker-picker .datepicker-cell.focused:not(.selected) {
             background-color: #4b5563; /* gray-600 */
         }
         .datepicker-picker .datepicker-cell.selected, .datepicker-picker .datepicker-cell.selected:hover {
              background-color: #4f46e5; /* indigo-600 */
              color: #fff;
         }
-        .datepicker-picker .datepicker-cell.focused:not(.selected) {
-            background-color: #374151;
-            border: 1px solid #6366f1;
-        }
-         .datepicker-picker .datepicker-cell.today:not(.selected){
+        .datepicker-picker .datepicker-cell.today:not(.selected){
             background-color: #374151;
             border: 1px solid #9ca3af;
         }
+        .datepicker-controls .btn {
+            color: #d1d5db !important; /* gray-300 */
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .datepicker-controls .btn:hover {
+             background-color: #4b5563 !important; /* gray-600 */
+        }
+        
         .action-buttons button:disabled {
             opacity: 0.2;
             cursor: not-allowed;
@@ -163,7 +169,13 @@
                     </div>
                     <div>
                         <label for="event-date" class="block text-sm font-medium text-gray-300">Date</label>
-                        <input type="text" id="event-date" name="event-date" placeholder="Select a date" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2" autocomplete="off">
+                        <div class="flex items-center space-x-4 mt-1">
+                            <input type="text" id="event-date" name="event-date" placeholder="Select a date" required class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2" autocomplete="off">
+                            <div class="flex items-center">
+                                <input id="is-date-tba" name="is-date-tba" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
+                                <label for="is-date-tba" class="ml-2 block text-sm text-gray-300">TBA</label>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label for="event-location" class="block text-sm font-medium text-gray-300">Location</label>
@@ -360,6 +372,7 @@
         const eventForm = getEl('event-form');
         const eventNameInput = getEl('event-name');
         const eventDateInput = getEl('event-date');
+        const isDateTbaCheckbox = getEl('is-date-tba');
         const eventLocationInput = getEl('event-location');
         const eventSocialInput = getEl('event-social');
         const eventPriceInput = getEl('event-price');
@@ -408,6 +421,8 @@
         const modalTitle = getEl('modal-title');
         const modalMessage = getEl('modal-message');
         const modalButtons = getEl('modal-buttons');
+
+        let datepickerInstance;
 
         // --- DATA STATE (PRE-POPULATED) ---
         let events = [
@@ -675,10 +690,10 @@
                  const priceValueStr = eventPriceInput.value.trim();
                  priceText = priceValueStr === '' ? 'TBA' : formatPrice(parseFloat(priceValueStr));
             }
-            
+
             const newEvent = {
                 name: eventNameInput.value,
-                date: eventDateInput.value,
+                date: isDateTbaCheckbox.checked ? 'TBA' : eventDateInput.value,
                 location: eventLocationInput.value,
                 socialMedia: eventSocialInput.value,
                 priceText: priceText,
@@ -691,6 +706,7 @@
             renderEventsInPreview();
             eventForm.reset();
             togglePriceInput();
+            toggleDateInput();
         }
 
         function handleListInteraction(e) {
@@ -731,6 +747,17 @@
                  eventPriceInput.disabled = false;
             } else if (!isFreeCheckbox.checked && !isTbaCheckbox.checked){
                  eventPriceInput.disabled = false;
+            }
+        }
+
+        function toggleDateInput() {
+            if (isDateTbaCheckbox.checked) {
+                eventDateInput.disabled = true;
+                eventDateInput.value = "TBA";
+                if(datepickerInstance) datepickerInstance.hide();
+            } else {
+                eventDateInput.disabled = false;
+                eventDateInput.value = "";
             }
         }
         
@@ -950,7 +977,7 @@
         // --- EVENT LISTENERS ---
         function attachListeners() {
             // Initial Setup on Load
-            const datepicker = new Datepicker(eventDateInput, {
+            datepickerInstance = new Datepicker(eventDateInput, {
                 format: 'dd/mm/yyyy',
                 autohide: true,
                 buttonClass: 'btn'
@@ -997,6 +1024,7 @@
             isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
             isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
             eventPriceInput.addEventListener('input', () => togglePriceInput('input'));
+            isDateTbaCheckbox.addEventListener('change', toggleDateInput);
 
             downloadBtn.addEventListener('click', downloadImage);
             clearBtn.addEventListener('click', clearAllEvents);
