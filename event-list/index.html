@@ -419,6 +419,21 @@
                     </div>
                  </div>
 
+                 <!-- Experimental Features -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Experimental Features</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                           <input id="auto-paginate" name="auto-paginate" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
+                           <label for="auto-paginate" class="ml-2 block text-sm text-gray-300">Auto-fit Events Per Page</label>
+                        </div>
+                         <div class="flex items-center">
+                           <input id="auto-shorten-location" name="auto-shorten-location" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
+                           <label for="auto-shorten-location" class="ml-2 block text-sm text-gray-300">Auto-shorten Location Text</label>
+                        </div>
+                    </div>
+                </div>
+
                  <!-- Text Customization Section -->
                  <div>
                     <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Text Customization</h2>
@@ -641,6 +656,10 @@
         const imageBackgroundControls = getEl('image-background-controls');
         const overlayColorInput = getEl('overlay-color');
 
+        // Experimental Features
+        const autoPaginateCheckbox = getEl('auto-paginate');
+        const autoShortenLocationCheckbox = getEl('auto-shorten-location');
+
         let datepickerInstance;
         let currentImageObjectUrl = null;
 
@@ -687,6 +706,8 @@
             "background": "deep-space",
             "footer": "Made by Wibu_Baleendah",
             "eventsPerPage": 9,
+            "autoPaginate": false,
+            "autoShortenLocation": false,
             "showTimestamp": true,
             "showUrl": false,
             "posterSize": "1080x1920",
@@ -865,9 +886,14 @@
             if (event.isFree) {
                 priceStyleKey = 'priceFree';
                 priceType = 'free';
-            } else if (event.priceText.toUpperCase() === 'TBA') {
+            } else if ((event.priceText || '').toUpperCase() === 'TBA') {
                 priceStyleKey = 'priceTba';
                 priceType = 'tba';
+            }
+            
+            let locationText = event.location;
+            if(settings.autoShortenLocation && locationText.length > 40) {
+                 locationText = locationText.substring(0, 37) + '...';
             }
 
             const actionButtonsHtml = showActionButtons 
@@ -888,7 +914,7 @@
                     <div class="flex flex-wrap items-center gap-x-4">
                         <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
                         <span class="event-item-details-text text-gray-500">|</span>
-                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="location">${event.location}</span>
+                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="location" data-original-location="${event.location}">${locationText}</span>
                         ${event.socialMedia ? `<span class="event-item-details-text text-gray-500">|</span><span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
                     </div>
                 </div>
@@ -931,6 +957,9 @@
             posterBackgroundSelect.value = settings.background;
             posterFooterInput.value = settings.footer;
             eventsPerPageInput.value = settings.eventsPerPage;
+            eventsPerPageInput.disabled = settings.autoPaginate;
+            autoPaginateCheckbox.checked = settings.autoPaginate;
+            autoShortenLocationCheckbox.checked = settings.autoShortenLocation;
             showTimestampCheckbox.checked = settings.showTimestamp;
             showUrlCheckbox.checked = settings.showUrl;
             gSheetUrlInput.value = settings.gSheetUrl;
@@ -1151,10 +1180,13 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
+                    let importedState = null;
+                    let importedEvents = null;
+
                     if (fileName.endsWith('.json')) {
-                        const importedState = JSON.parse(e.target.result);
+                        importedState = JSON.parse(e.target.result);
                         if (importedState && importedState.settings) {
-                           events = importedState.events || [];
+                           importedEvents = importedState.events || [];
                             const loadedSettings = importedState.settings;
                             settings = { ...settings, ...loadedSettings };
                             if (typeof settings.backgroundImage === 'string' && settings.backgroundImage.startsWith('data:image')) {
@@ -1168,50 +1200,87 @@
                              return;
                         }
                     } else if (fileName.endsWith('.csv')) {
-                         Papa.parse(e.target.result, {
-                            header: true,
-                            skipEmptyLines: true,
-                            complete: (results) => {
+                         const csvText = e.target.result;
+                         await new Promise((resolve, reject) => {
+                             findAndProcessCsv(csvText, (results) => {
                                 const parsedEvents = parseCsvData(results);
                                 if(parsedEvents) {
-                                    events = parsedEvents;
+                                    importedEvents = parsedEvents;
+                                    resolve();
                                 } else {
-                                    return; // parseCsvData will show an alert on failure
+                                    reject(new Error("CSV parsing failed.")); 
                                 }
-                            }
+                            });
                         });
                     }
                     
-                    if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
-                    if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
+                    if (importedEvents !== null) {
+                        events = importedEvents;
+                        if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
+                        if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
 
-                    sortEvents();
-                    await saveState();
-                    await loadState(); // Reload to create new object URL for the image
-                    updateFormControls();
-                    updatePosterLook();
-                    renderEventsInPreview();
-                    showStatusMessage('Data imported successfully!');
+                        sortEvents();
+                        await saveState();
+                        await loadState(); // Reload to create new object URL for the image
+                        updateFormControls();
+                        updatePosterLook();
+                        renderEventsInPreview();
+                        showStatusMessage('Data imported successfully!');
+                    }
                 } catch (error) {
                     console.error("Error parsing imported file:", error);
-                    showAlert('Import Error', 'Could not read or parse the selected file.');
+                    if (error.message !== "CSV parsing failed.") {
+                        showAlert('Import Error', 'Could not read or parse the selected file.');
+                    }
                 }
             };
             reader.readAsText(file);
             importInput.value = '';
         }
 
+        function findAndProcessCsv(csvText, onComplete) {
+            const lines = csvText.split('\n');
+            let headerRowIndex = -1;
+            
+            const oldHeadersSample = ['name', 'date'];
+            const newHeadersSample = ['tanggal', 'event'];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].toLowerCase().trim();
+                const hasOld = oldHeadersSample.every(h => line.includes(h));
+                const hasNew = newHeadersSample.every(h => line.includes(h));
+                if (hasOld || hasNew) {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) {
+                showAlert('CSV Error', 'Could not find a valid header row. Please ensure columns like "name", "date" or "Tanggal", "Event" exist.');
+                onComplete({ data: [], errors: [{message: "Header not found"}]});
+                return;
+            }
+
+            const csvDataFromHeaders = lines.slice(headerRowIndex).join('\n');
+            
+            Papa.parse(csvDataFromHeaders, {
+                header: true,
+                skipEmptyLines: true,
+                complete: onComplete
+            });
+        }
+        
         function parseCsvData(results) {
-            if (results.errors.length) {
+            if (results.errors.length > 0 && results.errors.some(e => e.code !== 'TooManyFields' && e.code !== 'TooFewFields')) {
                 console.error("CSV Parsing Errors:", results.errors);
                 showAlert('Parsing Error', 'Could not parse the CSV data. Please check the file format.');
-                return null; // Indicate failure
+                return null;
             }
             
-            const actualHeaders = results.meta.fields.map(h => h.trim());
+            const actualHeaders = results.meta.fields.map(h => h.trim().toLowerCase());
             
-            const oldHeaders = ['name', 'date', 'location', 'socialMedia', 'priceText', 'isFree'];
-            const newHeaders = ['Tanggal', 'Event', 'Lokasi', 'Ticket', 'Link Event'];
+            const oldHeaders = ['name', 'date', 'location', 'socialmedia', 'pricetext', 'isfree'];
+            const newHeaders = ['tanggal', 'event', 'lokasi', 'ticket', 'link event'];
             
             const hasOldHeaders = oldHeaders.every(h => actualHeaders.includes(h));
             const hasNewHeaders = newHeaders.every(h => actualHeaders.includes(h));
@@ -1219,7 +1288,7 @@
             if (!hasOldHeaders && !hasNewHeaders) {
                 const missingOld = oldHeaders.filter(h => !actualHeaders.includes(h));
                 const missingNew = newHeaders.filter(h => !actualHeaders.includes(h));
-                let errorMessage = 'The CSV must contain all required columns. ';
+                let errorMessage = 'The CSV is missing required columns. ';
 
                 if (missingOld.length < missingNew.length) {
                     errorMessage += `Standard format is missing: ${missingOld.join(', ')}.`;
@@ -1233,13 +1302,30 @@
             const isNewFormat = hasNewHeaders;
 
             const parsedEvents = results.data.map(row => {
+                const lowerCaseRow = {};
+                for (const key in row) {
+                    lowerCaseRow[key.trim().toLowerCase()] = row[key];
+                }
+
                 if (isNewFormat) {
-                    // New format parsing logic
-                    const monthMap = { 'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 'mei': '05', 'juni': '06', 'juli': '07', 'agustus': '08', 'september': '09', 'oktober': '10', 'november': '11', 'desember': '12' };
-                    const dateStr = (row.Tanggal || '').trim();
-                    let formattedDate = dateStr; // Default to original if parsing fails
+                    const monthMap = { 
+                        'januari': '01', 'january': '01',
+                        'februari': '02', 'february': '02',
+                        'maret': '03', 'march': '03',
+                        'april': '04', 
+                        'mei': '05', 'may': '05',
+                        'juni': '06', 'june': '06',
+                        'juli': '07', 'july': '07',
+                        'agustus': '08', 'august': '08',
+                        'september': '09', 
+                        'oktober': '10', 'october': '10',
+                        'november': '11', 
+                        'desember': '12', 'december': '12'
+                    };
+                    const dateStr = (lowerCaseRow['tanggal'] || '').trim();
+                    let formattedDate = dateStr; 
                     
-                    if (dateStr.toUpperCase() !== 'TBA') {
+                    if (dateStr.toUpperCase() !== 'TBA' && dateStr) {
                         const dateParts = dateStr.split(' ');
                         if (dateParts.length === 3) {
                             const day = dateParts[0].padStart(2, '0');
@@ -1253,8 +1339,31 @@
                         formattedDate = 'TBA';
                     }
 
-                    const ticketValue = (row.Ticket || '').trim();
-                    const socialValue = (row['Link Event'] || '').trim();
+                    let ticketValue = (lowerCaseRow['ticket'] || '').trim();
+                    let isTicketFree = false;
+                    const ticketUpper = ticketValue.toUpperCase();
+
+                    if (ticketUpper === 'FREE') {
+                        isTicketFree = true;
+                    } else if (ticketUpper !== 'TBA') {
+                        if (ticketUpper.includes('-')) {
+                            const firstValue = ticketUpper.split('-')[0].trim();
+                            const number = parseFloat(firstValue.replace('K', '')) * 1000;
+                            if (!isNaN(number)) {
+                                ticketValue = formatPrice(number) + "+";
+                            }
+                        } else if (ticketUpper.endsWith('K')) {
+                            const number = parseFloat(ticketUpper.replace('K', '')) * 1000;
+                            if (!isNaN(number)) {
+                                ticketValue = formatPrice(number);
+                            }
+                        } else if (!isNaN(parseFloat(ticketValue))) {
+                            ticketValue = formatPrice(parseFloat(ticketValue));
+                        }
+                    }
+                    
+
+                    const socialValue = (lowerCaseRow['link event'] || '').trim();
                     let socialHandle = socialValue;
 
                     if (socialValue) {
@@ -1262,32 +1371,29 @@
                             const url = new URL(socialValue);
                             const pathParts = url.pathname.split('/').filter(Boolean);
                             socialHandle = pathParts.pop() || '';
-                        } catch (e) {
-                            // Not a valid URL, treat as is
-                        }
+                        } catch (e) { }
                         if (socialHandle && !socialHandle.startsWith('@')) {
                             socialHandle = '@' + socialHandle;
                         }
                     }
                     
                     return {
-                        name: row.Event || '',
+                        name: lowerCaseRow['event'] || '',
                         date: formattedDate,
-                        location: row.Lokasi || '',
+                        location: lowerCaseRow['lokasi'] || '',
                         socialMedia: socialHandle,
                         priceText: ticketValue,
-                        isFree: ticketValue.toUpperCase() === 'FREE'
+                        isFree: isTicketFree
                     };
 
                 } else {
-                    // Old format parsing logic
                     return {
-                        name: row.name || '',
-                        date: row.date || '',
-                        location: row.location || '',
-                        socialMedia: row.socialMedia || '',
-                        priceText: row.priceText || '',
-                        isFree: String(row.isFree).toUpperCase() === 'TRUE'
+                        name: lowerCaseRow.name || '',
+                        date: lowerCaseRow.date || '',
+                        location: lowerCaseRow.location || '',
+                        socialMedia: lowerCaseRow.socialmedia || '',
+                        priceText: lowerCaseRow.pricetext || '',
+                        isFree: String(lowerCaseRow.isfree).toUpperCase() === 'TRUE'
                     };
                 }
             });
@@ -1405,8 +1511,52 @@
             const delay = ms => new Promise(res => setTimeout(res, ms));
             const [width, height] = settings.posterSize.split('x').map(Number);
             
-            const eventsPerPage = parseInt(eventsPerPageInput.value, 10) || 9;
-            const totalPages = Math.ceil(events.length / eventsPerPage);
+            let pageChunks = [];
+
+            if (settings.autoPaginate) {
+                loadingIndicator.textContent = 'Calculating page layout...';
+                await delay(50); // Allow UI to update
+                
+                const measureClone = posterContent.cloneNode(true);
+                measureClone.style.position = 'absolute';
+                measureClone.style.left = '-9999px';
+                measureClone.style.top = '-9999px';
+                measureClone.style.visibility = 'hidden';
+                document.body.appendChild(measureClone);
+                
+                const listContainer = measureClone.querySelector('.event-list-container');
+                const availableHeight = listContainer.clientHeight;
+                
+                let remainingEvents = [...events];
+                
+                while(remainingEvents.length > 0) {
+                    let currentChunk = [];
+                    listContainer.innerHTML = '';
+                    for (let i = 0; i < remainingEvents.length; i++) {
+                        const event = remainingEvents[i];
+                        const eventElement = createEventElement(event, i, false);
+                        listContainer.appendChild(eventElement);
+
+                        if(listContainer.scrollHeight > availableHeight) {
+                            if (currentChunk.length === 0) {
+                                currentChunk.push(event); 
+                            }
+                            break;
+                        }
+                        currentChunk.push(event);
+                    }
+                    pageChunks.push(currentChunk);
+                    remainingEvents.splice(0, currentChunk.length);
+                }
+
+                document.body.removeChild(measureClone);
+
+            } else {
+                 const eventsPerPage = parseInt(eventsPerPageInput.value, 10) || 9;
+                 for (let i = 0; i < events.length; i += eventsPerPage) {
+                    pageChunks.push(events.slice(i, i + eventsPerPage));
+                }
+            }
             
             // Pre-process the image once if needed
             let processedImageUrl = null;
@@ -1416,10 +1566,10 @@
             }
 
 
-            for (let i = 0; i < totalPages; i++) {
+            for (let i = 0; i < pageChunks.length; i++) {
                 const page = i + 1;
-                loadingIndicator.textContent = `Generating image ${page} of ${totalPages}...`;
-                const chunk = events.slice(i * eventsPerPage, (i + 1) * eventsPerPage);
+                loadingIndicator.textContent = `Generating image ${page} of ${pageChunks.length}...`;
+                const chunk = pageChunks[i];
 
                 const posterClone = posterContent.cloneNode(true);
                 posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
@@ -1455,7 +1605,7 @@
                     urlEl.textContent = window.location.href;
                     urlEl.style.display = 'block';
                 } else {
-                    urlEl.style.display = 'none';
+                     urlEl.style.display = 'none';
                 }
 
                 posterClone.style.position = 'absolute';
@@ -1572,11 +1722,6 @@
             // General customization listeners
             posterSizeSelect.addEventListener('change', async (e) => { 
                 settings.posterSize = e.target.value;
-                if (settings.posterSize === '1080x1350') {
-                    settings.eventsPerPage = 5;
-                } else {
-                    settings.eventsPerPage = 9;
-                }
                 updateFormControls();
                 updatePosterLook(); 
                 await saveState();
@@ -1585,11 +1730,23 @@
             posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; previewSubtitle.textContent = e.target.value; debouncedSaveState(); });
             posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePosterLook(); saveState(); });
             posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; previewFooter.textContent = e.target.value; debouncedSaveState(); });
-            eventsPerPageInput.addEventListener('change', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
+            eventsPerPageInput.addEventListener('input', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
             showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
             showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
             gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
             gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
+            
+            // Experimental features
+            autoPaginateCheckbox.addEventListener('change', (e) => {
+                settings.autoPaginate = e.target.checked;
+                eventsPerPageInput.disabled = settings.autoPaginate;
+                saveState();
+            });
+             autoShortenLocationCheckbox.addEventListener('change', (e) => {
+                settings.autoShortenLocation = e.target.checked;
+                renderEventsInPreview();
+                saveState();
+            });
 
             // Image background listeners
             uploadImageBtn.addEventListener('click', () => backgroundImageInput.click());
@@ -1679,18 +1836,14 @@
                     }
                     const csvText = await response.text();
                     
-                    Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: async (results) => {
-                            const parsedEvents = parseCsvData(results);
-                            if (parsedEvents) {
-                                events = parsedEvents;
-                                sortEvents();
-                                await saveState();
-                                renderEventsInPreview();
-                                showStatusMessage('Data fetched successfully!');
-                            }
+                    findAndProcessCsv(csvText, async (results) => {
+                        const parsedEvents = parseCsvData(results);
+                        if (parsedEvents) {
+                            events = parsedEvents;
+                            sortEvents();
+                            await saveState();
+                            renderEventsInPreview();
+                            showStatusMessage('Data fetched successfully!');
                         }
                     });
 
