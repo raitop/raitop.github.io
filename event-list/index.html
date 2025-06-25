@@ -187,6 +187,11 @@
           -moz-appearance: textfield;
         }
 
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
     </style>
 </head>
 <body class="bg-gray-800 text-white">
@@ -330,10 +335,14 @@
             </div>
             
             <!-- Right Column: Other Controls -->
-            <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg space-y-8">
-                 <div>
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Poster Customization</h2>
-                    <div class="space-y-4">
+            <div id="controls-accordion" class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg space-y-2">
+                 <!-- Poster Settings Accordion -->
+                 <div class="accordion-item">
+                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                         <span>Poster Settings</span>
+                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                     </button>
+                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
                         <div>
                             <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
                             <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
@@ -403,7 +412,7 @@
                             <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
                             <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                         </div>
-                         <div>
+                         <div id="events-per-page-container">
                             <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
                             <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
                             <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
@@ -419,25 +428,13 @@
                     </div>
                  </div>
 
-                 <!-- Experimental Features -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Experimental Features</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-center">
-                           <input id="auto-paginate" name="auto-paginate" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                           <label for="auto-paginate" class="ml-2 block text-sm text-gray-300">Auto-fit Events Per Page</label>
-                        </div>
-                         <div class="flex items-center">
-                           <input id="auto-shorten-location" name="auto-shorten-location" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                           <label for="auto-shorten-location" class="ml-2 block text-sm text-gray-300">Auto-shorten Location Text</label>
-                        </div>
-                    </div>
-                </div>
-
-                 <!-- Text Customization Section -->
-                 <div>
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Text Customization</h2>
-                    <div class="space-y-4">
+                 <!-- Text Customization Accordion -->
+                 <div class="accordion-item">
+                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                         <span>Text Customization</span>
+                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                     </button>
+                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
                         <div>
                             <label for="text-style-category" class="block text-sm font-medium text-gray-300">Edit Text Style For</label>
                             <select id="text-style-category" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2"></select>
@@ -520,6 +517,24 @@
                     </div>
                  </div>
                  
+                 <!-- Experimental Features Accordion -->
+                 <div class="accordion-item">
+                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
+                         <span>Experimental Features</span>
+                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                     </button>
+                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
+                        <div class="flex items-center">
+                           <input id="auto-paginate" name="auto-paginate" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
+                           <label for="auto-paginate" class="ml-2 block text-sm text-gray-300">Auto-fit Events Per Page</label>
+                        </div>
+                         <div class="flex items-center">
+                           <input id="auto-shorten-location" name="auto-shorten-location" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
+                           <label for="auto-shorten-location" class="ml-2 block text-sm text-gray-300">Auto-shorten Location Text</label>
+                        </div>
+                    </div>
+                </div>
+
                  <!-- Status Message Area -->
                 <div id="status-container" class="mt-4 h-8">
                      <div id="status-message" class="text-center text-green-400 font-semibold"></div>
@@ -606,6 +621,7 @@
         const posterSubtitleInput = getEl('poster-subtitle');
         const posterBackgroundSelect = getEl('poster-background');
         const posterFooterInput = getEl('poster-footer');
+        const eventsPerPageContainer = getEl('events-per-page-container');
         const eventsPerPageInput = getEl('events-per-page');
         const showTimestampCheckbox = getEl('show-timestamp');
         const showUrlCheckbox = getEl('show-url');
@@ -957,7 +973,7 @@
             posterBackgroundSelect.value = settings.background;
             posterFooterInput.value = settings.footer;
             eventsPerPageInput.value = settings.eventsPerPage;
-            eventsPerPageInput.disabled = settings.autoPaginate;
+            eventsPerPageContainer.style.display = settings.autoPaginate ? 'none' : 'block';
             autoPaginateCheckbox.checked = settings.autoPaginate;
             autoShortenLocationCheckbox.checked = settings.autoShortenLocation;
             showTimestampCheckbox.checked = settings.showTimestamp;
@@ -1739,7 +1755,7 @@
             // Experimental features
             autoPaginateCheckbox.addEventListener('change', (e) => {
                 settings.autoPaginate = e.target.checked;
-                eventsPerPageInput.disabled = settings.autoPaginate;
+                eventsPerPageContainer.style.display = settings.autoPaginate ? 'none' : 'block';
                 saveState();
             });
              autoShortenLocationCheckbox.addEventListener('change', (e) => {
@@ -1850,6 +1866,23 @@
                 } catch (error) {
                     console.error('Error fetching Google Sheet:', error);
                     showAlert('Fetch Error', 'Could not fetch data from the provided URL. Please ensure it is a valid, publicly published CSV link.');
+                }
+            });
+            
+            // Accordion listener
+            getEl('controls-accordion').addEventListener('click', (e) => {
+                const header = e.target.closest('.accordion-header');
+                if (!header) return;
+
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('svg');
+
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    icon.style.transform = 'rotate(-180deg)';
                 }
             });
         }
