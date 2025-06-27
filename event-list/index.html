@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Poster Generator</title>
+    <title>Event Poster Generator (SEKAI Inspired)</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2canvas library for converting HTML to image -->
@@ -13,193 +13,104 @@
     <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/js/datepicker-full.min.js"></script>
     <!-- Papa Parse for CSV parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <!-- Google Fonts: Inter, Playfair Display, Roboto Mono -->
+    <!-- Google Fonts: Roboto for UI, plus others for poster -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:wght@400..900&family=Roboto+Mono:wght@100..700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;700;900&family=Playfair+Display:wght@400;700;900&family=Roboto+Mono:wght@400;700&family=Lato:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Oswald:wght@400;700&family=Lora:wght@400;700&family=Source+Code+Pro:wght@400;700&family=Lobster&family=Pacifico&display=swap" rel="stylesheet">
     <style>
-        /* Apply a base font */
+        /* --- Project SEKAI Inspired Theme --- */
+        :root {
+            --ui-primary: #59d8ff; /* Vibrant Cyan */
+            --ui-on-primary: #003641; /* Dark text for on-cyan elements */
+            --ui-primary-container: #004e5d; /* Darker cyan container */
+            --ui-on-primary-container: #b4ebff; /* Light text for on-cyan-container */
+            --ui-surface-container-highest: #2e303d;
+            --ui-surface-container: #1c1d26;
+            --ui-surface: #0e0f14;
+            --ui-on-surface: #e4e1e6;
+            --ui-on-surface-variant: #b0c6d2;
+            --ui-outline: #41a5d3;
+            --ui-outline-variant: #3d4653;
+            --ui-error: #ff4aa2; /* Sekai Pink for Danger */
+            --ui-on-error: #5c002e; /* Dark pink for on-danger */
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--ui-surface); color: var(--ui-on-surface);
         }
-        /* The container that will be captured */
+
+        /* --- Component Styles --- */
+        .ui-card {
+            background-color: var(--ui-surface-container); border-radius: 1rem;
+            border: 1px solid var(--ui-outline-variant);
+        }
+        .ui-input, .ui-select {
+            background-color: var(--ui-surface-container-highest); border: 1px solid var(--ui-outline-variant);
+            border-radius: 0.5rem; transition: border-color 0.2s ease, background-color 0.3s;
+            padding: 0.75rem 1rem; color: var(--ui-on-surface);
+        }
+        .ui-input:focus, .ui-select:focus {
+            outline: none; border-color: var(--ui-primary);
+        }
+        
+        .ui-btn {
+            border-radius: 9999px; padding: 0.75rem 1.5rem; font-weight: 500;
+            transition: all 0.2s ease; border: 1px solid transparent; text-transform: uppercase;
+        }
+        .ui-btn-filled {
+            background-color: var(--ui-primary); color: var(--ui-on-primary);
+        }
+        .ui-btn-filled:hover { filter: brightness(1.1); }
+        .ui-btn-tonal {
+            background-color: var(--ui-primary-container); color: var(--ui-on-primary-container);
+        }
+        .ui-btn-tonal:hover { filter: brightness(1.2); }
+        .ui-btn-outlined {
+            border-color: var(--ui-outline); color: var(--ui-primary);
+        }
+        .ui-btn-outlined:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .ui-btn-danger {
+             border-color: var(--ui-error); color: var(--ui-error);
+        }
+        .ui-btn-danger:hover { background-color: var(--ui-error); color: var(--ui-on-error); }
+
+        /* --- Original Poster Styles (Untouched) --- */
         #poster-content {
-            width: 1080px;
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            width: 1080px; background-size: cover; background-position: center; display: flex;
+            flex-direction: column; position: relative; overflow: hidden;
         }
-
-        #poster-background-image {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background-size: cover;
-            background-position: center;
-            transition: filter 0.3s ease;
-        }
-
-        /* Default Story Size (1080x1920) */
-        #poster-content.size-story {
-            height: 1920px;
-            padding: 96px;
-        }
-        #poster-content.size-story .event-list-container {
-             flex-grow: 1;
-        }
-
-        /* Post Size (1080x1350) */
-        #poster-content.size-post {
-            height: 1350px;
-            padding: 64px;
-        }
+        #poster-background-image { position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; transition: filter 0.3s ease; }
+        #poster-content.size-story { height: 1920px; padding: 96px; }
+        #poster-content.size-story .event-list-container { flex-grow: 1; }
+        #poster-content.size-post { height: 1350px; padding: 64px; }
+        #poster-content.size-post #poster-header { margin-top: 24px; }
+        #poster-content.size-post .event-list-container { height: 874px; flex-grow: 0; flex-shrink: 0; border-top: 2px solid rgba(255,255,255,0.15); border-bottom: 2px solid rgba(255,255,255,0.15); margin: 20px 0; padding: 32px 0; }
+        #poster-content.size-post #poster-footer-wrapper { margin-top: 0; }
+        .event-list-container::-webkit-scrollbar { width: 12px; }
+        .event-list-container::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .event-list-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+        .event-list-container::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
+        .html2canvas-container .action-buttons { display: none; }
+        [contenteditable="true"]:focus { outline: 2px dashed rgba(89, 216, 255, 0.8); box-shadow: 0 0 15px rgba(89, 216, 255, 0.3); border-radius: 8px; }
         
-        #poster-content.size-post #poster-header {
-             margin-top: 24px; /* Added margin to push title down */
-        }
-
-        #poster-content.size-post .event-list-container {
-            height: 874px; /* Adjusted height to compensate for reduced margin */
-            flex-grow: 0;
-            flex-shrink: 0;
-            border-top: 2px solid rgba(255,255,255,0.15);
-            border-bottom: 2px solid rgba(255,255,255,0.15);
-            margin: 20px 0; /* Reduced top/bottom margin to move list up */
-            padding-top: 32px;
-            padding-bottom: 32px;
-            padding-left: 0; /* Override Tailwind's px-4 to widen content */
-            padding-right: 0; /* Override Tailwind's px-4 to widen content */
-        }
-         #poster-content.size-post #poster-footer-wrapper {
-             margin-top: 0; /* Override default margin */
-         }
-
-
-        /* Styling for the scrollbar for better aesthetics and readability */
-        .event-list-container::-webkit-scrollbar {
-            width: 12px;
-        }
-        .event-list-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        .event-list-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            border: 3px solid transparent;
-            background-clip: content-box;
-        }
-        .event-list-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-        /* Hide action buttons during canvas generation */
-        .html2canvas-container .action-buttons {
-            display: none;
-        }
-        
-        /* Enforce light theme for datepicker */
-        .datepicker {
-            background-color: #fff !important;
-        }
-        .datepicker-picker {
-            background-color: #f9fafb; /* gray-50 */
-            border-radius: 1rem;
-            border: 1px solid #d1d5db; /* gray-300 */
-        }
-        .datepicker-picker span {
-             color: #111827; /* gray-900 */
-        }
-        .datepicker-picker .datepicker-cell:not(.disabled):hover, .datepicker-picker .datepicker-cell.focused:not(.selected) {
-            background-color: #e5e7eb; /* gray-200 */
-        }
-        .datepicker-picker .datepicker-cell.selected, .datepicker-picker .datepicker-cell.selected:hover {
-             background-color: #4f46e5; /* indigo-600 */
-             color: #fff;
-        }
-        .datepicker-picker .datepicker-cell.today:not(.selected){
-            background-color: #fff;
-            border: 1px solid #4f46e5;
-        }
-        .datepicker-controls {
-            background-color: #fff;
-        }
-        .datepicker-controls .btn {
-            color: #374151 !important; /* gray-700 */
-            font-weight: bold;
-        }
-        .datepicker-controls .btn:hover {
-             background-color: #e5e7eb !important; /* gray-200 */
-        }
-        
-        .action-buttons button:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-        }
-        
-        /* Style for directly editable text on the canvas */
-        [contenteditable="true"] {
-            cursor: text;
-        }
-        [contenteditable="true"]:focus {
-            outline: 2px dashed rgba(139, 148, 162, 0.5); /* A soft outline for editing */
-            box-shadow: 0 0 15px rgba(139, 148, 162, 0.2);
-            border-radius: 8px;
-        }
-        
-        /* Style for the status message */
-        #status-message {
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        #status-message.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        /* Custom color picker style */
-        input[type="color"] {
-            -webkit-appearance: none;
-            border: none;
-            width: 100%;
-            height: 40px;
-            cursor: pointer;
-            border-radius: 0.5rem;
-            background-color: transparent;
-        }
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
-        }
-        input[type="color"]::-webkit-color-swatch {
-            border: 1px solid #4b5563; /* gray-600 */
-            border-radius: 0.5rem;
-        }
-
-        /* Hide number input arrows */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
-        }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
-
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
+        /* --- Other Helper Styles --- */
+        #status-message { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; opacity: 0; transform: translateY(20px); }
+        #status-message.visible { opacity: 1; transform: translateY(0); }
+        input[type="color"] { -webkit-appearance: none; border: 1px solid var(--ui-outline); width: 100%; height: 40px; cursor: pointer; border-radius: 1.5rem; background-color: transparent; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 1.5rem; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
     </style>
 </head>
-<body class="bg-gray-800 text-white">
+<body class="sekai-theme">
 
     <div class="container mx-auto p-4 lg:p-8">
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
             <h1 class="text-4xl font-bold tracking-tight">Social Media Event Poster Generator</h1>
-            <p class="text-gray-400 mt-2 max-w-3xl mx-auto">Create your event poster by adding events and customizing the design. You can edit text directly on the preview. If your list is too long, multiple images will be generated automatically. Your work is saved in your browser.</p>
+            <p class="text-[var(--m3-on-surface-variant)] mt-2 max-w-3xl mx-auto">Create your event poster by adding events and customizing the design. Your work is saved automatically in your browser.</p>
         </header>
         
         <input type="file" id="import-input" class="hidden" accept=".json,.csv">
@@ -209,111 +120,77 @@
         <div class="flex flex-col lg:grid lg:grid-cols-3 lg:gap-8">
 
             <!-- Left Column: Event Details Form -->
-            <div class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg space-y-8">
+            <div class="lg:col-span-1 ui-card p-6 space-y-8">
                  <div>
-                    <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Event Details</h2>
-                    <form id="event-form" class="space-y-4">
+                    <h2 class="text-xl font-medium mb-4 border-b border-[var(--ui-outline-variant)] pb-3">Event Details</h2>
+                    <form id="event-form" class="space-y-6">
                         <div>
-                            <label for="event-name" class="block text-sm font-medium text-gray-300">Event Name</label>
-                            <input type="text" id="event-name" name="event-name" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="event-name" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Event Name</label>
+                            <input type="text" id="event-name" required class="ui-input w-full">
                         </div>
                         <div>
-                            <label for="event-date" class="block text-sm font-medium text-gray-300">Date</label>
-                            <div class="flex items-center space-x-4 mt-1">
-                                <input type="text" id="event-date" name="event-date" placeholder="Select a date" required class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2" autocomplete="off">
+                            <label for="event-date" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Date</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="text" id="event-date" placeholder="Select a date" required class="ui-input w-full" autocomplete="off">
                                 <div class="flex items-center">
-                                    <input id="is-date-tba" name="is-date-tba" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                                    <label for="is-date-tba" class="ml-2 block text-sm text-gray-300">TBA</label>
+                                    <input id="is-date-tba" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                                    <label for="is-date-tba" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">TBA</label>
                                 </div>
                             </div>
                         </div>
                         <div>
-                            <label for="event-location" class="block text-sm font-medium text-gray-300">Location</label>
-                            <input type="text" id="event-location" name="event-location" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="event-location" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Location</label>
+                            <input type="text" id="event-location" required class="ui-input w-full">
                         </div>
                          <div>
-                            <label for="event-social" class="block text-sm font-medium text-gray-300">Social Media Handle</label>
-                            <input type="text" id="event-social" name="event-social" placeholder="@username" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="event-social" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Social Handle</label>
+                            <input type="text" id="event-social" placeholder="@username" class="ui-input w-full">
                         </div>
                         <div>
-                            <label for="event-price" class="block text-sm font-medium text-gray-300">Ticket Price (IDR)</label>
-                            <div class="flex items-center space-x-4 mt-1">
-                                <input type="number" id="event-price" name="event-price" placeholder="50000" class="block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="event-price" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Ticket Price (IDR)</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="number" id="event-price" placeholder="50000" class="ui-input w-full">
                                  <div class="flex items-center">
-                                    <input id="is-free" name="is-free" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                                    <label for="is-free" class="ml-2 block text-sm text-gray-300">Free</label>
+                                    <input id="is-free" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                                    <label for="is-free" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Free</label>
                                 </div>
                                  <div class="flex items-center">
-                                    <input id="is-tba" name="is-tba" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                                    <label for="is-tba" class="ml-2 block text-sm text-gray-300">TBA</label>
+                                    <input id="is-tba" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                                    <label for="is-tba" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">TBA</label>
                                 </div>
                             </div>
                         </div>
                         
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md">
-                            Add Event to List
-                        </button>
+                        <button type="submit" class="w-full ui-btn ui-btn-filled">Add Event to List</button>
                     </form>
                 </div>
-                 <!-- Data Source Controls -->
                 <div>
-                     <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Data Management</h2>
-                     <div class="space-y-4">
-                        <div>
-                            <label for="g-sheet-url" class="block text-sm font-medium text-gray-300">Google Sheet URL</label>
-                             <p class="text-xs text-gray-500 mt-1 mb-1">Publish your sheet to the web as a CSV to get this link.</p>
-                            <input type="url" id="g-sheet-url" placeholder="https://docs.google.com/..." class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white p-2">
-                            <button id="fetch-g-sheet" title="Fetches the latest event data from the public Google Sheet URL." class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fill-rule="evenodd" d="M15.55 5.55a8 8 0 10-11.1 11.1 8 8 0 0011.1-11.1zM10 16a6 6 0 100-12 6 6 0 000 12zm-1-9a1 1 0 112 0v2.586l1.707 1.707a1 1 0 01-1.414 1.414L9 11.414V7z" clip-rule="evenodd" />
-                                </svg>
-                                <span>Fetch Live Data</span>
-                            </button>
+                    <h2 class="text-xl font-medium mb-4 border-b border-[var(--ui-outline-variant)] pb-3">Data Management</h2>
+                    <div class="space-y-4">
+                         <div>
+                            <label for="g-sheet-url" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Google Sheet URL</label>
+                            <input type="url" id="g-sheet-url" placeholder="Published sheet CSV link" class="ui-input w-full">
+                            <button id="fetch-g-sheet" class="w-full mt-2 ui-btn ui-btn-tonal flex items-center justify-center space-x-2"><span>Fetch Live Data</span></button>
+                         </div>
+                        <div class="border-t border-[var(--ui-outline-variant)] pt-4 space-y-4">
+                             <div class="grid grid-cols-2 gap-4">
+                                 <button id="import-btn" class="ui-btn ui-btn-outlined flex items-center justify-center space-x-2"><span>Import</span></button>
+                                 <button id="export-btn" class="ui-btn ui-btn-outlined flex items-center justify-center space-x-2"><span>Export</span></button>
+                             </div>
+                            <div class="flex items-center justify-center">
+                                <input id="export-with-image" name="export-with-image" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent" checked>
+                                <label for="export-with-image" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Include background in export</label>
+                            </div>
                         </div>
-
-                         <button id="sort-btn" title="Sorts the current event list by date, from oldest to newest." class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                             <span>Sort Events by Date</span>
-                        </button>
-
-                        <div class="flex items-center justify-center pt-2">
-                           <input id="export-with-image" name="export-with-image" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-600 rounded bg-gray-700" checked>
-                           <label for="export-with-image" class="ml-2 block text-sm text-gray-300">Include Background Image in Export</label>
-                        </div>
-                         <button id="export-btn" title="Exports all current data and settings into a .json file." class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                             <span>Export Data</span>
-                        </button>
-                          <button id="import-btn" title="Import data from a .json or .csv file to overwrite current settings." class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4 4m0 0l-4 4m4-4H4" /></svg>
-                             <span>Import Data</span>
-                        </button>
-                         <button id="clear-btn" title="Removes all events from the list." class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                             <span>Clear All Events</span>
-                        </button>
                     </div>
-                </div>
-
-                <!-- Download Controls -->
-                <div class="mt-8">
-                     <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Download</h2>
-                     <button id="download-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md flex items-center justify-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        <span>Generate & Download Image</span>
-                    </button>
-                    <div id="loading-indicator" class="hidden text-center mt-4 text-yellow-400">Generating image... please wait.</div>
                 </div>
             </div>
 
             <!-- Middle Column: Poster Preview -->
             <div class="lg:col-span-1 flex-1 flex flex-col items-center">
-                <h2 class="text-2xl font-bold mb-4 text-center">Poster Preview</h2>
-                <!-- Container for the scaled preview. It sets the size and clips. -->
-                <div id="preview-wrapper" class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-gray-900">
-                    <!-- This div is scaled by JavaScript to fit the container above -->
+                <h2 class="text-xl font-medium mb-4 text-center">Poster Preview</h2>
+                <div id="preview-wrapper" class="w-full max-w-[360px] md:max-w-[450px] shadow-2xl rounded-xl overflow-hidden bg-black">
                     <div id="poster-scaler" class="origin-top-left">
-                        <!-- The actual poster content that will be rendered -->
                         <div id="poster-content" class="text-white">
                             <div id="poster-background-image"></div>
                             <div id="poster-background-overlay" class="absolute inset-0 z-10"></div>
@@ -321,9 +198,7 @@
                                 <h1 id="preview-title" class="font-black tracking-tighter uppercase" contenteditable="true" data-setting="title"></h1>
                                 <p id="preview-subtitle" class="text-5xl text-gray-400 mt-2" contenteditable="true" data-setting="subtitle"></p>
                             </header>
-                            <!-- Using class instead of ID for safer cloning -->
                             <main class="event-list-container overflow-y-auto py-8 px-4 relative z-20">
-                                <!-- Events will be dynamically inserted here -->
                             </main>
                             <div id="poster-footer-wrapper" class="mt-auto pt-4 relative z-20 flex-shrink-0">
                                 <p id="preview-timestamp" class="text-center text-gray-500 text-xl mb-2"></p>
@@ -333,35 +208,45 @@
                         </div>
                     </div>
                 </div>
+                 <div class="w-full max-w-[360px] md:max-w-[450px] mt-4 space-y-2">
+                     <button id="download-btn" class="w-full ui-btn ui-btn-filled flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm14-9h-4V3H9v8H5l7 7 7-7z"/></svg>
+                        <span>Generate & Download</span>
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="sort-btn" class="w-full ui-btn ui-btn-tonal flex items-center justify-center space-x-2 text-xs"><span>Sort by Date</span></button>
+                        <button id="clear-btn" class="w-full ui-btn ui-btn-danger flex items-center justify-center space-x-2 text-xs"><span>Clear Events</span></button>
+                    </div>
+                    <div id="loading-indicator" class="hidden text-center mt-4 text-[var(--ui-primary)]">Generating image... please wait.</div>
+                </div>
             </div>
             
             <!-- Right Column: Other Controls -->
-            <div id="controls-accordion" class="lg:col-span-1 bg-gray-900 p-6 rounded-2xl shadow-lg space-y-2">
-                 <!-- Poster Settings Accordion -->
+            <div id="controls-accordion" class="lg:col-span-1 ui-card p-6 space-y-2">
                  <div class="accordion-item">
-                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                         <span>Poster Settings</span>
-                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                     </button>
-                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
+                    <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-medium p-3 -m-3 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition">
+                        <span>Poster Settings</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div class="accordion-content space-y-6 pt-4 mt-2 border-t border-[var(--ui-outline-variant)]">
                         <div>
-                            <label for="poster-size" class="block text-sm font-medium text-gray-300">Poster Size</label>
-                            <select id="poster-size" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="poster-size" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Poster Size</label>
+                            <select id="poster-size" class="ui-select w-full">
                                 <option value="1080x1920">1080 x 1920 (Story)</option>
                                 <option value="1080x1350">1080 x 1350 (Post 4:5)</option>
                             </select>
                         </div>
                         <div>
-                            <label for="poster-title" class="block text-sm font-medium text-gray-300">Title Text</label>
-                            <input type="text" id="poster-title" name="poster-title" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="poster-title" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Title Text</label>
+                            <input type="text" id="poster-title" class="ui-input w-full">
                         </div>
                         <div>
-                            <label for="poster-subtitle" class="block text-sm font-medium text-gray-300">Subtitle Text</label>
-                            <input type="text" id="poster-subtitle" name="poster-subtitle" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="poster-subtitle" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Subtitle Text</label>
+                            <input type="text" id="poster-subtitle" class="ui-input w-full">
                         </div>
                         <div>
-                            <label for="poster-background" class="block text-sm font-medium text-gray-300">Background Type</label>
-                            <select id="poster-background" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="poster-background" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Background Type</label>
+                            <select id="poster-background" class="ui-select w-full">
                                 <option value="deep-space">Deep Space (Default)</option>
                                 <option value="sunset">Sunset</option>
                                 <option value="oceanic">Oceanic</option>
@@ -372,203 +257,177 @@
                                 <option value="image">Image</option>
                             </select>
                         </div>
-                        <div id="custom-gradient-controls" class="hidden space-y-2 border-t border-gray-700 pt-4">
-                            <div class="flex items-center gap-4">
-                                <label for="gradient-start-color" class="text-sm font-medium text-gray-300">Start</label>
-                                <input type="color" id="gradient-start-color" value="#1f2937">
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <label for="gradient-end-color" class="text-sm font-medium text-gray-300">End</label>
-                                 <input type="color" id="gradient-end-color" value="#111827">
-                            </div>
-                        </div>
-                         <!-- Image Background Controls -->
-                        <div id="image-background-controls" class="hidden space-y-4 border-t border-gray-700 pt-4">
-                            <div class="grid grid-cols-2 gap-2">
-                                <button id="upload-image-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-sm">Upload Image</button>
-                                <button id="remove-image-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-sm">Remove Image</button>
-                            </div>
-                             <div class="flex items-center justify-between mt-1">
-                                <label for="background-blur-input" class="block text-sm font-medium text-gray-300">Blur</label>
-                                <div class="relative flex items-center">
-                                    <button id="background-blur-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                    <input type="number" id="background-blur-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="50" step="1">
-                                    <button id="background-blur-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                </div>
-                            </div>
-                             <div class="flex items-center justify-between">
-                                <label for="overlay-color" class="block text-sm font-medium text-gray-300">Overlay Color</label>
-                                <input type="color" id="overlay-color" value="#000000" class="w-2/5">
+                        <div id="custom-gradient-controls" class="hidden space-y-2 pt-4 border-t border-[var(--ui-outline-variant)]">
+                            <div class="flex items-center justify-between">
+                                <label for="gradient-start-color" class="text-sm font-medium text-[var(--m3-on-surface-variant)]">Start</label>
+                                <input type="color" id="gradient-start-color" value="#1f2937" class="w-2/5">
                             </div>
                             <div class="flex items-center justify-between">
-                                <label class="block text-sm font-medium text-gray-300">Overlay Opacity (%)</label>
-                                <div class="relative flex items-center">
-                                    <button id="overlay-opacity-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                    <input type="number" id="overlay-opacity-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="100" step="1">
-                                    <button id="overlay-opacity-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
+                                <label for="gradient-end-color" class="text-sm font-medium text-[var(--m3-on-surface-variant)]">End</label>
+                                 <input type="color" id="gradient-end-color" value="#111827" class="w-2/5">
+                            </div>
+                        </div>
+                        <div id="image-background-controls" class="hidden space-y-4 pt-4 border-t border-[var(--ui-outline-variant)]">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="upload-image-btn" class="ui-btn ui-btn-tonal text-xs">Upload Image</button>
+                                <button id="remove-image-btn" class="ui-btn ui-btn-danger text-xs">Remove Image</button>
+                            </div>
+                             <div>
+                                <label for="background-blur-input" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Blur</label>
+                                <input type="range" id="background-blur-slider" min="0" max="50" step="1" class="w-full mt-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Overlay</label>
+                                 <select id="overlay-type" class="ui-select w-full mt-2">
+                                     <option value="none">None</option>
+                                     <option value="solid">Solid Color</option>
+                                     <option value="gradient">Gradient</option>
+                                 </select>
+                            </div>
+                            <div id="overlay-controls" class="hidden space-y-4">
+                                <div id="overlay-solid-controls" class="hidden space-y-2">
+                                     <div class="flex items-center justify-between">
+                                         <label for="overlay-color" class="block text-sm text-[var(--m3-on-surface-variant)]">Overlay Color</label>
+                                         <input type="color" id="overlay-color" class="w-2/5">
+                                     </div>
+                                </div>
+                                <div id="overlay-gradient-controls" class="hidden space-y-2">
+                                      <div class="flex items-center justify-between">
+                                         <label for="overlay-gradient-start" class="block text-sm text-[var(--m3-on-surface-variant)]">Start Color</label>
+                                         <input type="color" id="overlay-gradient-start" class="w-2/5">
+                                     </div>
+                                      <div class="flex items-center justify-between">
+                                         <label for="overlay-gradient-end" class="block text-sm text-[var(--m3-on-surface-variant)]">End Color</label>
+                                         <input type="color" id="overlay-gradient-end" class="w-2/5">
+                                     </div>
+                                      <div>
+                                        <label for="overlay-gradient-direction" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Direction</label>
+                                        <input type="range" id="overlay-gradient-direction" min="0" max="360" step="1" class="w-full mt-2">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="overlay-opacity-slider" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Opacity</label>
+                                    <input type="range" id="overlay-opacity-slider" min="0" max="1" step="0.05" class="w-full mt-2">
                                 </div>
                             </div>
                         </div>
                          <div>
-                            <label for="poster-footer" class="block text-sm font-medium text-gray-300">Footer Text</label>
-                            <input type="text" id="poster-footer" name="poster-footer" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="poster-footer" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Footer Text</label>
+                            <input type="text" id="poster-footer" class="ui-input w-full">
                         </div>
                          <div id="events-per-page-container">
-                            <label for="events-per-page" class="block text-sm font-medium text-gray-300">Events Per Image</label>
-                            <input type="number" id="events-per-page" name="events-per-page" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2">
+                            <label for="events-per-page" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Events Per Image</label>
+                            <input type="number" id="events-per-page" class="ui-input w-full">
                             <p id="events-per-page-recommendation" class="text-xs text-gray-500 mt-1"></p>
-                        </div>
-                        <div class="flex items-center">
-                            <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                            <label for="show-timestamp" class="ml-2 block text-sm text-gray-300">Show Generation Timestamp</label>
-                        </div>
-                         <div class="flex items-center">
-                            <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-600 rounded bg-gray-700">
-                            <label for="show-url" class="ml-2 block text-sm text-gray-300">Show Page URL</label>
                         </div>
                     </div>
                  </div>
 
-                 <!-- Text Customization Accordion -->
                  <div class="accordion-item">
-                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                         <span>Text Customization</span>
-                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                     </button>
-                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
+                    <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-medium p-3 -m-3 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition">
+                        <span>Text & Style</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div class="accordion-content space-y-4 pt-4 mt-2 border-t border-[var(--ui-outline-variant)]">
                         <div>
-                            <label for="text-style-category" class="block text-sm font-medium text-gray-300">Edit Text Style For</label>
-                            <select id="text-style-category" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2"></select>
+                            <label for="text-style-category" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Edit Style For</label>
+                            <select id="text-style-category" class="ui-select w-full"></select>
                         </div>
-
-                        <div id="text-style-controls" class="space-y-4 border-t border-gray-700 pt-4">
-                            <!-- Font Family -->
+                        <div id="text-style-controls" class="space-y-4 pt-4 border-t border-[var(--ui-outline-variant)]">
                             <div>
-                                <label for="font-family" class="block text-sm font-medium text-gray-300">Font Family</label>
-                                <select id="font-family" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-white p-2"></select>
+                                <label for="font-family" class="block text-sm font-medium text-[var(--m3-on-surface-variant)] mb-1">Font Family</label>
+                                <select id="font-family" class="ui-select w-full"></select>
                             </div>
-                            <!-- Color -->
                              <div class="flex items-center justify-between">
-                                <label for="text-color" class="block text-sm font-medium text-gray-300">Color</label>
+                                <label for="text-color" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Color</label>
                                 <input type="color" id="text-color" class="w-2/5">
                             </div>
-                            <!-- Font Size & Weight -->
-                             <div class="flex items-center justify-between">
-                                <label for="font-size-input" class="block text-sm font-medium text-gray-300">Size</label>
-                                <div class="relative flex items-center">
-                                     <button id="font-size-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                     <input type="number" id="font-size-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="1">
-                                     <button id="font-size-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                </div>
+                            <div class="flex items-center justify-between">
+                                <label for="font-size-input" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Size</label>
+                                <input type="number" id="font-size-input" class="ui-input w-20 text-center p-1" min="1">
                             </div>
                             <div class="flex items-center justify-between">
-                                <label for="font-weight-input" class="block text-sm font-medium text-gray-300">Weight</label>
-                                 <div class="relative flex items-center">
-                                     <button id="font-weight-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                     <input type="number" id="font-weight-input" class="w-20 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="100" max="900" step="100">
-                                     <button id="font-weight-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                </div>
+                                <label for="font-weight-input" class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Weight</label>
+                                <input type="number" id="font-weight-input" class="ui-input w-20 text-center p-1" min="100" max="900" step="100">
                             </div>
-                            <!-- Text Stroke -->
-                            <div class="flex items-center justify-between">
-                                <label class="block text-sm font-medium text-gray-300">Outline</label>
-                                <div class="flex items-center gap-2">
-                                     <input type="color" id="stroke-color" class="w-24">
-                                    <div class="relative flex items-center">
-                                         <button id="stroke-width-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                         <input type="number" id="stroke-width-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="10" step="0.1">
-                                         <button id="stroke-width-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                    </div>
-                                </div>
+                            <div class="space-y-2 pt-2 border-t border-[var(--ui-outline-variant)]">
+                                <label class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Outline</label>
+                                 <div class="flex items-center justify-between">
+                                     <input type="color" id="stroke-color" class="w-2/5">
+                                     <input type="number" id="stroke-width-input" class="ui-input w-20 text-center p-1" min="0" max="10" step="0.1">
+                                 </div>
                             </div>
-                             <!-- Text Shadow -->
-                            <div class="space-y-3">
+                             <div class="space-y-2 pt-2 border-t border-[var(--ui-outline-variant)]">
+                                <label class="block text-sm font-medium text-[var(--m3-on-surface-variant)]">Shadow</label>
                                 <div class="flex items-center justify-between">
-                                    <label class="text-sm font-medium text-gray-300">Shadow Color</label>
-                                    <div class="w-2/5">
-                                        <input type="color" id="shadow-color">
-                                    </div>
+                                    <label class="text-sm text-[var(--m3-on-surface-variant)]">Color</label>
+                                    <input type="color" id="shadow-color" class="w-2/5">
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <label for="shadow-blur-input" class="text-sm text-gray-400">Blur:</label>
-                                    <div class="relative flex items-center">
-                                        <button id="shadow-blur-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                        <input type="number" id="shadow-blur-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="0" max="50" step="1">
-                                        <button id="shadow-blur-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                    </div>
+                                    <label for="shadow-blur-input" class="text-sm text-[var(--m3-on-surface-variant)]">Blur</label>
+                                    <input type="number" id="shadow-blur-input" class="ui-input w-20 text-center p-1" min="0" max="50" step="1">
+                                </div>
+                                 <div class="flex items-center justify-between">
+                                    <label for="shadow-offset-x-input" class="text-sm text-[var(--m3-on-surface-variant)]">X Offset</label>
+                                    <input type="number" id="shadow-offset-x-input" class="ui-input w-20 text-center p-1" min="-50" max="50" step="1">
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <label for="shadow-offset-x-input" class="text-sm text-gray-400">X Offset:</label>
-                                    <div class="relative flex items-center">
-                                        <button id="shadow-offset-x-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                        <input type="number" id="shadow-offset-x-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="-50" max="50" step="1">
-                                        <button id="shadow-offset-x-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                     <label for="shadow-offset-y-input" class="text-sm text-gray-400">Y Offset:</label>
-                                     <div class="relative flex items-center">
-                                        <button id="shadow-offset-y-down" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-l-md">-</button>
-                                        <input type="number" id="shadow-offset-y-input" class="w-16 text-center bg-gray-700 border-y-0 border-x border-gray-600" min="-50" max="50" step="1">
-                                        <button id="shadow-offset-y-up" class="px-2 py-0.5 bg-gray-600 hover:bg-gray-500 rounded-r-md">+</button>
-                                    </div>
+                                    <label for="shadow-offset-y-input" class="text-sm text-[var(--m3-on-surface-variant)]">Y Offset</label>
+                                    <input type="number" id="shadow-offset-y-input" class="ui-input w-20 text-center p-1" min="-50" max="50" step="1">
                                 </div>
                             </div>
                         </div>
                     </div>
                  </div>
                  
-                 <!-- Experimental Features Accordion -->
                  <div class="accordion-item">
-                     <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-bold p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition">
-                         <span>Experimental Features</span>
-                         <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                     </button>
-                     <div class="accordion-content space-y-4 pt-4 border-t border-gray-700">
+                    <button class="accordion-header w-full flex justify-between items-center text-left text-xl font-medium p-3 -m-3 rounded-lg hover:bg-[rgba(255,255,255,0.08)] transition">
+                        <span>Advanced</span>
+                        <svg class="w-6 h-6 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div class="accordion-content space-y-4 pt-4 mt-2 border-t border-[var(--ui-outline-variant)]">
                         <div class="flex items-center">
-                           <input id="auto-paginate" name="auto-paginate" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                           <label for="auto-paginate" class="ml-2 block text-sm text-gray-300">Auto-fit Events Per Page</label>
+                           <input id="auto-paginate" name="auto-paginate" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                           <label for="auto-paginate" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Auto-fit Events Per Page</label>
                         </div>
                          <div class="flex items-center">
-                           <input id="auto-shorten-location" name="auto-shorten-location" type="checkbox" class="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-600 rounded bg-gray-700">
-                           <label for="auto-shorten-location" class="ml-2 block text-sm text-gray-300">Auto-shorten Location Text</label>
+                           <input id="auto-shorten-location" name="auto-shorten-location" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                           <label for="auto-shorten-location" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Auto-shorten Location Text</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="show-timestamp" name="show-timestamp" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                            <label for="show-timestamp" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Show Generation Timestamp</label>
+                        </div>
+                         <div class="flex items-center">
+                            <input id="show-url" name="show-url" type="checkbox" class="h-4 w-4 text-[var(--ui-primary)] focus:ring-[var(--ui-primary)] border-[var(--ui-outline)] rounded bg-transparent">
+                            <label for="show-url" class="ml-2 block text-sm text-[var(--m3-on-surface-variant)]">Show Page URL</label>
                         </div>
                     </div>
                 </div>
 
-                 <!-- Status Message Area -->
                 <div id="status-container" class="mt-4 h-8">
                      <div id="status-message" class="text-center text-green-400 font-semibold"></div>
                 </div>
             </div>
-
         </div>
     </div>
     
-    <!-- Custom Modal -->
-    <div id="custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex justify-center items-center p-4 transition-opacity duration-300">
-        <div class="bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md text-center transform scale-95 transition-transform duration-300">
-            <h3 id="modal-title" class="text-xl font-bold mb-4">Modal Title</h3>
-            <p id="modal-message" class="text-gray-300 mb-6">Modal message goes here.</p>
-            <div id="modal-buttons" class="flex justify-center space-x-4">
-                <!-- Buttons will be injected here by JS -->
-            </div>
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex justify-center items-center p-4">
+        <div class="ui-card p-6 w-full max-w-md text-center">
+            <h3 id="modal-title" class="text-xl font-medium mb-4">Modal Title</h3>
+            <p id="modal-message" class="text-[var(--m3-on-surface-variant)] mb-6">Modal message goes here.</p>
+            <div id="modal-buttons" class="flex justify-center space-x-4"></div>
         </div>
     </div>
-
 
     <script>
     // --- IIFE Wrapper to encapsulate the entire script ---
     (function() {
         // --- CONFIGURATION CONSTANTS ---
         const CONFIG = {
-            DB_NAME: 'PosterGeneratorDB',
-            DB_VERSION: 1,
-            STORE_NAME: 'userState',
-            DEBOUNCE_DELAY: 300,
-            STATUS_MESSAGE_DURATION: 2000,
+            DB_NAME: 'PosterGeneratorDB', DB_VERSION: 1, STORE_NAME: 'userState',
+            DEBOUNCE_DELAY: 300, STATUS_MESSAGE_DURATION: 2000,
         };
-
         // --- IndexedDB Helper ---
         const dbPromise = new Promise((resolve, reject) => {
             const request = indexedDB.open(CONFIG.DB_NAME, CONFIG.DB_VERSION);
@@ -581,602 +440,144 @@
                 }
             };
         });
-
         const idb = {
-            get: (key) => dbPromise.then(db => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction(CONFIG.STORE_NAME, 'readonly');
-                    const store = transaction.objectStore(CONFIG.STORE_NAME);
-                    const request = store.get(key);
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = () => reject(request.error);
-                });
-            }),
-            set: (key, value) => dbPromise.then(db => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction(CONFIG.STORE_NAME, 'readwrite');
-                    const store = transaction.objectStore(CONFIG.STORE_NAME);
-                    const request = store.put(value, key);
-                    request.onsuccess = () => resolve(request.result);
-                    request.onerror = () => reject(request.error);
-                });
-            }),
+            get: (key) => dbPromise.then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction(CONFIG.STORE_NAME, 'readonly').objectStore(CONFIG.STORE_NAME).get(key);
+                tx.onsuccess = () => resolve(tx.result); tx.onerror = () => reject(tx.error);
+            })),
+            set: (key, value) => dbPromise.then(db => new Promise((resolve, reject) => {
+                const tx = db.transaction(CONFIG.STORE_NAME, 'readwrite').objectStore(CONFIG.STORE_NAME).put(value, key);
+                tx.onsuccess = () => resolve(tx.result); tx.onerror = () => reject(tx.error);
+            })),
         };
-
 
         // --- DOM REFERENCES ---
         const getEl = (id) => document.getElementById(id);
-        
-        // Form & Controls
-        const eventForm = getEl('event-form');
-        const eventNameInput = getEl('event-name');
-        const eventDateInput = getEl('event-date');
-        const isDateTbaCheckbox = getEl('is-date-tba');
-        const eventLocationInput = getEl('event-location');
-        const eventSocialInput = getEl('event-social');
-        const eventPriceInput = getEl('event-price');
-        const isFreeCheckbox = getEl('is-free');
-        const isTbaCheckbox = getEl('is-tba');
-        const posterSizeSelect = getEl('poster-size');
-        const posterTitleInput = getEl('poster-title');
-        const posterSubtitleInput = getEl('poster-subtitle');
-        const posterBackgroundSelect = getEl('poster-background');
-        const posterFooterInput = getEl('poster-footer');
-        const eventsPerPageContainer = getEl('events-per-page-container');
-        const eventsPerPageInput = getEl('events-per-page');
-        const showTimestampCheckbox = getEl('show-timestamp');
-        const showUrlCheckbox = getEl('show-url');
-        const eventsPerPageRecommendation = getEl('events-per-page-recommendation');
-        const customGradientControls = getEl('custom-gradient-controls');
-        const gradientStartColorInput = getEl('gradient-start-color');
-        const gradientEndColorInput = getEl('gradient-end-color');
-        
-        // Buttons & Indicators
-        const downloadBtn = getEl('download-btn');
-        const clearBtn = getEl('clear-btn');
-        const sortBtn = getEl('sort-btn');
-        const exportBtn = getEl('export-btn');
-        const exportWithImageCheckbox = getEl('export-with-image');
-        const importBtn = getEl('import-btn');
-        const importInput = getEl('import-input');
-        const backgroundImageInput = getEl('background-image-input');
-        const uploadImageBtn = getEl('upload-image-btn');
-        const removeImageBtn = getEl('remove-image-btn');
-        const loadingIndicator = getEl('loading-indicator');
-        const statusMessage = getEl('status-message');
-        const gSheetUrlInput = getEl('g-sheet-url');
-        const fetchGSheetBtn = getEl('fetch-g-sheet');
-
-        // Preview Area
-        const posterContent = getEl('poster-content');
-        const posterBackgroundImage = getEl('poster-background-image');
-        const posterBackgroundOverlay = getEl('poster-background-overlay');
-        const previewTitle = getEl('preview-title');
-        const previewSubtitle = getEl('preview-subtitle');
-        const previewListContainer = document.querySelector('#poster-content .event-list-container');
-        const previewTimestamp = getEl('preview-timestamp');
-        const previewFooter = getEl('preview-footer');
-        const previewUrl = getEl('preview-url');
-
-        // Modal
-        const modal = getEl('custom-modal');
-        const modalTitle = getEl('modal-title');
-        const modalMessage = getEl('modal-message');
-        const modalButtons = getEl('modal-buttons');
-        
-        // Text Style Controls
-        const textStyleCategorySelect = getEl('text-style-category');
-        const fontFamilySelect = getEl('font-family');
-        const textColorInput = getEl('text-color');
-        
-        // Image Background Controls
-        const imageBackgroundControls = getEl('image-background-controls');
-        const overlayColorInput = getEl('overlay-color');
-
-        // Experimental Features
-        const autoPaginateCheckbox = getEl('auto-paginate');
-        const autoShortenLocationCheckbox = getEl('auto-shorten-location');
-
-        let datepickerInstance;
-        let currentImageObjectUrl = null;
+        const eventForm = getEl('event-form'), eventNameInput = getEl('event-name'), eventDateInput = getEl('event-date'),
+            isDateTbaCheckbox = getEl('is-date-tba'), eventLocationInput = getEl('event-location'), eventSocialInput = getEl('event-social'),
+            eventPriceInput = getEl('event-price'), isFreeCheckbox = getEl('is-free'), isTbaCheckbox = getEl('is-tba'),
+            posterSizeSelect = getEl('poster-size'), posterTitleInput = getEl('poster-title'), posterSubtitleInput = getEl('poster-subtitle'),
+            posterBackgroundSelect = getEl('poster-background'), posterFooterInput = getEl('poster-footer'),
+            eventsPerPageContainer = getEl('events-per-page-container'), eventsPerPageInput = getEl('events-per-page'),
+            showTimestampCheckbox = getEl('show-timestamp'), showUrlCheckbox = getEl('show-url'),
+            customGradientControls = getEl('custom-gradient-controls'), gradientStartColorInput = getEl('gradient-start-color'), gradientEndColorInput = getEl('gradient-end-color'),
+            downloadBtn = getEl('download-btn'), clearBtn = getEl('clear-btn'), sortBtn = getEl('sort-btn'), exportBtn = getEl('export-btn'),
+            exportWithImageCheckbox = getEl('export-with-image'),
+            importBtn = getEl('import-btn'), importInput = getEl('import-input'), backgroundImageInput = getEl('background-image-input'),
+            uploadImageBtn = getEl('upload-image-btn'), removeImageBtn = getEl('remove-image-btn'), loadingIndicator = getEl('loading-indicator'), statusMessage = getEl('status-message'),
+            gSheetUrlInput = getEl('g-sheet-url'), fetchGSheetBtn = getEl('fetch-g-sheet'),
+            posterContent = getEl('poster-content'), posterBackgroundImage = getEl('poster-background-image'), posterBackgroundOverlay = getEl('poster-background-overlay'),
+            previewTitle = getEl('preview-title'), previewSubtitle = getEl('preview-subtitle'), previewListContainer = document.querySelector('#poster-content .event-list-container'),
+            previewTimestamp = getEl('preview-timestamp'), previewFooter = getEl('preview-footer'), previewUrl = getEl('preview-url'),
+            modal = getEl('custom-modal'), modalTitle = getEl('modal-title'), modalMessage = getEl('modal-message'), modalButtons = getEl('modal-buttons'),
+            textStyleCategorySelect = getEl('text-style-category'), fontFamilySelect = getEl('font-family'), textColorInput = getEl('text-color'),
+            fontSizeInput = getEl('font-size-input'), fontWeightInput = getEl('font-weight-input'), strokeColorInput = getEl('stroke-color'),
+            strokeWidthInput = getEl('stroke-width-input'), shadowColorInput = getEl('shadow-color'), shadowBlurInput = getEl('shadow-blur-input'),
+            shadowOffsetXInput = getEl('shadow-offset-x-input'), shadowOffsetYInput = getEl('shadow-offset-y-input'),
+            imageBackgroundControls = getEl('image-background-controls'),
+            backgroundBlurSlider = getEl('background-blur-slider'), overlayTypeSelect = getEl('overlay-type'),
+            overlayControls = getEl('overlay-controls'), overlaySolidControls = getEl('overlay-solid-controls'),
+            overlayGradientControls = getEl('overlay-gradient-controls'), overlayColorInput = getEl('overlay-color'),
+            overlayGradientStartInput = getEl('overlay-gradient-start'), overlayGradientEndInput = getEl('overlay-gradient-end'),
+            overlayGradientDirectionSlider = getEl('overlay-gradient-direction'), overlayOpacitySlider = getEl('overlay-opacity-slider'),
+            autoPaginateCheckbox = getEl('auto-paginate'), autoShortenLocationCheckbox = getEl('auto-shorten-location');
 
         // --- DATA STATE ---
-        let events = [
-            { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bojongsoang, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
+        let datepickerInstance, currentImageObjectUrl = null, events = [], settings = {};
+        const createDefaultStyle = (o={})=>({...{fontFamily:"'Inter',sans-serif",fontSize:32,fontWeight:400,color:"#E5E7EB",strokeColor:"#000000",strokeWidth:0,shadowColor:"#000000",shadowBlur:0,shadowOffsetX:0,shadowOffsetY:0},...o});
+        const defaultTextStyles={title:createDefaultStyle({fontSize:82,fontWeight:900,color:"#FFFFFF"}),subtitle:createDefaultStyle({fontSize:52,fontWeight:500,color:"#9CA3AF"}),eventName:createDefaultStyle({fontSize:52,fontWeight:700,color:"#FFFFFF"}),eventDetails:createDefaultStyle({fontSize:32,fontWeight:400,color:"#D1D5DB"}),price:createDefaultStyle({fontSize:40,fontWeight:700,color:"#67E8F9"}),priceFree:createDefaultStyle({fontSize:40,fontWeight:700,color:"#6EE7B7"}),priceTba:createDefaultStyle({fontSize:40,fontWeight:700,color:"#FCD34D"}),footer:createDefaultStyle({fontSize:24,fontWeight:400,color:"#6B7280"}),timestamp:createDefaultStyle({fontSize:20,fontWeight:400,color:"#6B7280"}),url:createDefaultStyle({fontSize:18,fontWeight:400,color:"#4B5563"})};
+        const defaultSettings={theme:"sekai",title:"UPCOMING EVENT",subtitle:"List on Bandung",background:"deep-space",footer:"Made by Wibu_Baleendah",eventsPerPage:9,autoPaginate:!1,autoShortenLocation:!1,showTimestamp:!0,showUrl:!1,posterSize:"1080x1920",gSheetUrl:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTGyL52upswhocSjN6JDulVRYjzMjXCT6VLnvD373OhjDCOgRRuFpSE0YpP0-oQp32bda58xBOCCZEJ/pub?gid=1358508738&single=true&output=csv",customGradient:{start:"#1f2937",end:"#111827"},backgroundImage:null,backgroundBlur:0,overlayType:"none",overlayColor:"#000000",overlayOpacity:0.5,overlayGradient:{start:"#000000",end:"#ffffff",direction:45},textStyles:JSON.parse(JSON.stringify(defaultTextStyles))};
+        const defaultEvents = [
+            { "name": "Nihon no Matsuri 16", "date": "21/06/2025", "location": "Telkom University, Bandung", "socialMedia": "@nihonnomatsuri", "priceText": "Rp 25.000", "isFree": false },
             { "name": "Bunka no Hi", "date": "28/06/2025", "location": "Cihampelas Walk, Bandung", "socialMedia": "@bunkanohi_", "priceText": "Free", "isFree": true },
-            { "name": "Bandung Lautan Creator Day 2", "date": "29/06/2025", "location": "Selah Hall, Bandung", "socialMedia": "@kyuufest / @bandunglautan.creator", "priceText": "Rp 15.000", "isFree": false },
-            { "name": "Genshiken ITB", "date": "05/07/2025", "location": "Aula Timur ITB", "socialMedia": "@genshikenitb", "priceText": "TBA", "isFree": false },
-            { "name": "Q-Anifest 2025", "date": "20/07/2025", "location": "Hotel Harris Festival City Link", "socialMedia": "@qtakasievent", "priceText": "Rp 50.000", "isFree": false },
-            { "name": "Festival Axia: KomyuDoujin", "date": "TBA", "location": "TBA", "socialMedia": "@festival.axia", "priceText": "TBA", "isFree": false }
         ];
-        
-        const createDefaultStyle = (overrides = {}) => ({
-            fontFamily: "'Inter', sans-serif",
-            fontSize: 32,
-            fontWeight: 400,
-            color: '#E5E7EB', // gray-200
-            strokeColor: '#000000',
-            strokeWidth: 0,
-            shadowColor: '#000000',
-            shadowBlur: 0,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0,
-            ...overrides,
-        });
+        const textStyleCategories={title:{label:"Title",elements:()=>[previewTitle]},subtitle:{label:"Subtitle",elements:()=>[previewSubtitle]},eventName:{label:"Event Name",elements:()=>document.querySelectorAll(".event-item-name")},eventDetails:{label:"Event Details (Date, Loc)",elements:()=>document.querySelectorAll(".event-item-details-text")},price:{label:"Ticket Price (Default)",elements:()=>document.querySelectorAll('.event-item-price[data-price-type="default"]')},priceFree:{label:"Ticket Price (Free)",elements:()=>document.querySelectorAll('.event-item-price[data-price-type="free"]')},priceTba:{label:"Ticket Price (TBA)",elements:()=>document.querySelectorAll('.event-item-price[data-price-type="tba"]')},footer:{label:"Footer",elements:()=>[previewFooter]},timestamp:{label:"Timestamp",elements:()=>[previewTimestamp]},url:{label:"URL",elements:()=>[previewUrl]}};
+        const availableFonts={
+            "'Inter', sans-serif": "Inter", "'Roboto', sans-serif": "Roboto", "'Lato', sans-serif": "Lato", "'Montserrat', sans-serif": "Montserrat",
+            "'Oswald', sans-serif": "Oswald", "'Playfair Display', serif": "Playfair Display", "'Lora', serif": "Lora", "'Merriweather', serif": "Merriweather",
+            "'Lobster', cursive": "Lobster", "'Pacifico', cursive": "Pacifico", "'Roboto Mono', monospace": "Roboto Mono", "'Source Code Pro', monospace": "Source Code Pro"
+        };
+        const gradients={ 'deep-space': 'linear-gradient(to bottom right, #1f2937, #111827)', 'sunset': 'linear-gradient(to bottom right, #7b2cbf, #f97316)', 'oceanic': 'linear-gradient(to bottom right, #0369a1, #10b981)', 'minty': 'linear-gradient(to bottom right, #6ee7b7, #3b82f6)', 'royal': 'linear-gradient(to bottom right, #7e22ce, #db2777)', 'gotham': 'linear-gradient(to bottom right, #404040, #0a0a0a)'};
 
-        const defaultTextStyles = {
-            title: createDefaultStyle({ fontSize: 82, fontWeight: 900, color: '#FFFFFF' }),
-            subtitle: createDefaultStyle({ fontSize: 52, fontWeight: 500, color: '#9CA3AF' }),
-            eventName: createDefaultStyle({ fontSize: 52, fontWeight: 700, color: '#FFFFFF' }),
-            eventDetails: createDefaultStyle({ fontSize: 32, fontWeight: 400, color: '#D1D5DB' }),
-            price: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#67E8F9' }), // cyan-300
-            priceFree: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#6EE7B7' }), // green-300
-            priceTba: createDefaultStyle({ fontSize: 40, fontWeight: 700, color: '#FCD34D' }), // yellow-300
-            footer: createDefaultStyle({ fontSize: 24, fontWeight: 400, color: '#6B7280' }),
-            timestamp: createDefaultStyle({ fontSize: 20, fontWeight: 400, color: '#6B7280' }),
-            url: createDefaultStyle({ fontSize: 18, fontWeight: 400, color: '#4B5563' }),
-        };
-
-        let settings = {
-            "title": "UPCOMING EVENT",
-            "subtitle": "List on Bandung",
-            "background": "deep-space",
-            "footer": "Made by Wibu_Baleendah",
-            "eventsPerPage": 9,
-            "autoPaginate": false,
-            "autoShortenLocation": false,
-            "showTimestamp": true,
-            "showUrl": false,
-            "posterSize": "1080x1920",
-            "gSheetUrl": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGyL52upswhocSjN6JDulVRYjzMjXCT6VLnvD373OhjDCOgRRuFpSE0YpP0-oQp32bda58xBOCCZEJ/pub?gid=1358508738&single=true&output=csv",
-            "customGradient": { "start": "#1f2937", "end": "#111827" },
-            "backgroundImage": null,
-            "backgroundBlur": 0,
-            "overlayColor": "#000000",
-            "overlayOpacity": 0.5,
-            "textStyles": JSON.parse(JSON.stringify(defaultTextStyles)) // Deep copy
-        };
-        
-        const textStyleCategories = {
-             title: { label: 'Title', elements: () => [previewTitle] },
-             subtitle: { label: 'Subtitle', elements: () => [previewSubtitle] },
-             eventName: { label: 'Event Name', elements: () => document.querySelectorAll('.event-item-name') },
-             eventDetails: { label: 'Event Details (Date, Loc)', elements: () => document.querySelectorAll('.event-item-details-text') },
-             price: { label: 'Ticket Price (Default)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="default"]') },
-             priceFree: { label: 'Ticket Price (Free)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="free"]') },
-             priceTba: { label: 'Ticket Price (TBA)', elements: () => document.querySelectorAll('.event-item-price[data-price-type="tba"]') },
-             footer: { label: 'Footer', elements: () => [previewFooter] },
-             timestamp: { label: 'Timestamp', elements: () => [previewTimestamp] },
-             url: { label: 'URL', elements: () => [previewUrl] },
-        };
-        
-        const availableFonts = {
-            "'Inter', sans-serif": "Inter",
-            "'Playfair Display', serif": "Playfair Display",
-            "'Roboto Mono', monospace": "Roboto Mono"
-        };
-
-        const gradients = {
-            'deep-space': 'linear-gradient(to bottom right, #1f2937, #111827)',
-            'sunset': 'linear-gradient(to bottom right, #7b2cbf, #f97316)',
-            'oceanic': 'linear-gradient(to bottom right, #0369a1, #10b981)',
-            'minty': 'linear-gradient(to bottom right, #6ee7b7, #3b82f6)',
-            'royal': 'linear-gradient(to bottom right, #7e22ce, #db2777)',
-            'gotham': 'linear-gradient(to bottom right, #404040, #0a0a0a)'
-        };
-        
-        // --- UTILITY FUNCTIONS ---
-        function debounce(func, delay = CONFIG.DEBOUNCE_DELAY) {
-            let timeoutId;
-            return (...args) => {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                }, delay);
-            };
-        }
-
+        // --- UTILS & MODALS ---
+        function debounce(func,delay=CONFIG.DEBOUNCE_DELAY){let t;return(...e)=>{clearTimeout(t),t=setTimeout(()=>func.apply(this,e),delay)}}
         let statusTimeout;
-        function showStatusMessage(message, isError = false) {
-            clearTimeout(statusTimeout);
-            statusMessage.textContent = message;
-            statusMessage.style.color = isError ? '#f87171' : '#4ade80'; // red-400 or green-400
-            statusMessage.classList.add('visible');
-            statusTimeout = setTimeout(() => {
-                statusMessage.classList.remove('visible');
-            }, CONFIG.STATUS_MESSAGE_DURATION);
-        }
+        function showStatusMessage(e,t=!1){clearTimeout(statusTimeout),statusMessage.textContent=e,statusMessage.style.color=t?"var(--ui-error)":"#4ade80",statusMessage.classList.add("visible"),statusTimeout=setTimeout(()=>{statusMessage.classList.remove("visible")},CONFIG.STATUS_MESSAGE_DURATION)}
+        function showAlert(e,t){modalTitle.textContent=e,modalMessage.textContent=t,modalButtons.innerHTML='<button id="modal-ok" class="ui-btn ui-btn-filled">OK</button>',modal.classList.remove("hidden"),setTimeout(()=>modal.firstElementChild.classList.remove("scale-95"),10),getEl("modal-ok").onclick=()=>{modal.firstElementChild.classList.add("scale-95"),setTimeout(()=>modal.classList.add("hidden"),300)}}
+        function showConfirm(e,t,n){modalTitle.textContent=e,modalMessage.textContent=t,modalButtons.innerHTML='<button id="modal-cancel" class="ui-btn ui-btn-outlined">Cancel</button><button id="modal-confirm" class="ui-btn ui-btn-danger">Confirm</button>',modal.classList.remove("hidden"),setTimeout(()=>modal.firstElementChild.classList.remove("scale-95"),10);const o=()=>{modal.firstElementChild.classList.add("scale-95"),setTimeout(()=>modal.classList.add("hidden"),300)};getEl("modal-cancel").onclick=o,getEl("modal-confirm").onclick=()=>{o(),n()}}
 
-        // --- MODAL FUNCTIONS ---
-        function showAlert(title, message) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalButtons.innerHTML = `<button id="modal-ok" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500">OK</button>`;
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
-            getEl('modal-ok').onclick = () => {
-                 modal.firstElementChild.classList.add('scale-95');
-                 setTimeout(() => modal.classList.add('hidden'), 300);
-            };
-        }
-
-        function showConfirm(title, message, onConfirm) {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalButtons.innerHTML = `
-                <button id="modal-cancel" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gray-500">Cancel</button>
-                <button id="modal-confirm" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500">Confirm</button>
-            `;
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
-            const hideModal = () => {
-                modal.firstElementChild.classList.add('scale-95');
-                setTimeout(() => modal.classList.add('hidden'), 300);
-            }
-            getEl('modal-cancel').onclick = hideModal;
-            getEl('modal-confirm').onclick = () => {
-                hideModal();
-                onConfirm();
-            };
-        }
-        
-        // --- DATA PERSISTENCE (using IndexedDB) ---
-        async function saveState() {
-            try {
-                await idb.set('appState', { events, settings });
-                showStatusMessage('Changes saved!');
-            } catch (error) {
-                console.error("Error saving state to IndexedDB:", error);
-                showAlert("Save Error", "Could not save your changes. Please try again.");
-            }
-        };
-        const debouncedSaveState = debounce(saveState, 500);
-
-        async function loadState() {
+        // --- DATA & STATE ---
+        const saveState=async()=>{try{await idb.set("appState",{events,settings}),showStatusMessage("Changes saved!")}catch(e){console.error("Error saving state:",e),showAlert("Save Error","Could not save your changes.")}},debouncedSaveState=debounce(saveState,500);
+        const loadState = async () => {
             try {
                 const loadedState = await idb.get('appState');
-                if (loadedState && loadedState.events && loadedState.settings) {
-                    events = loadedState.events;
-                    const loadedSettings = loadedState.settings;
-                    
-                    settings = { ...settings, ...loadedSettings };
-
-                    if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
-                    if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
-
-                    // Handle loading image Blob
-                    if (settings.backgroundImage instanceof Blob) {
-                        if (currentImageObjectUrl) {
-                            URL.revokeObjectURL(currentImageObjectUrl);
-                        }
-                        currentImageObjectUrl = URL.createObjectURL(settings.backgroundImage);
+                settings = JSON.parse(JSON.stringify(defaultSettings));
+                if (!loadedState || typeof loadedState !== 'object' || !loadedState.events || !loadedState.settings) {
+                    throw new Error("No valid state found in DB.");
+                }
+                
+                events = loadedState.events;
+                
+                for (const key in loadedState.settings) {
+                    if (Object.prototype.hasOwnProperty.call(loadedState.settings, key) && key !== 'textStyles' && key !== 'customGradient' && key !== 'overlayGradient') {
+                        settings[key] = loadedState.settings[key];
                     }
                 }
+                 if (loadedState.settings.textStyles) {
+                    for (const key in defaultTextStyles) {
+                        settings.textStyles[key] = { ...defaultTextStyles[key], ...loadedState.settings.textStyles[key] };
+                    }
+                }
+                 if (loadedState.settings.customGradient) {
+                    settings.customGradient = { ...defaultSettings.customGradient, ...loadedState.settings.customGradient };
+                }
+                 if (loadedState.settings.overlayGradient) {
+                    settings.overlayGradient = { ...defaultSettings.overlayGradient, ...loadedState.settings.overlayGradient };
+                }
+
+                if (settings.backgroundImage instanceof Blob) {
+                    if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
+                    currentImageObjectUrl = URL.createObjectURL(settings.backgroundImage);
+                }
             } catch (error) {
-                console.error("Could not load state from IndexedDB:", error);
-                // Fallback to default state if loading fails
+                console.warn("Could not load state, using defaults.", error);
+                events = JSON.parse(JSON.stringify(defaultEvents));
+                settings = JSON.parse(JSON.stringify(defaultSettings));
             }
         };
         
-        // --- DYNAMIC PREVIEW SIZING ---
-        function updatePreviewSize() {
-            const previewWrapper = getEl('preview-wrapper');
-            const posterScaler = getEl('poster-scaler');
-            if (!previewWrapper || !posterScaler) return;
-            const [width, height] = settings.posterSize.split('x').map(Number);
-            previewWrapper.style.aspectRatio = `${width} / ${height}`;
-            const containerWidth = previewWrapper.offsetWidth;
-            const scale = containerWidth / width;
-            posterScaler.style.transform = `scale(${scale})`;
-        }
-
-
-        // --- RENDERING & STYLING FUNCTIONS ---
-        function applyStylesToElement(element, styleObject) {
-            if (!element || !styleObject) return;
-            element.style.fontFamily = styleObject.fontFamily;
-            element.style.fontSize = `${styleObject.fontSize}px`;
-            element.style.fontWeight = styleObject.fontWeight;
-            element.style.color = styleObject.color;
-            element.style.webkitTextStroke = `${styleObject.strokeWidth}px ${styleObject.strokeColor}`;
-            element.style.textShadow = `${styleObject.shadowOffsetX}px ${styleObject.shadowOffsetY}px ${styleObject.shadowBlur}px ${styleObject.shadowColor}`;
-        }
+        // --- RENDERING ---
+        function updatePreviewSize(){const e=getEl("preview-wrapper"),t=getEl("poster-scaler");if(!e||!t){return}const[n,o]=settings.posterSize.split("x").map(Number);e.style.aspectRatio=`${n} / ${o}`;const s=e.offsetWidth/n;t.style.transform=`scale(${s})`}
+        function applyStylesToElement(e,t){e&&t&&(e.style.fontFamily=t.fontFamily,e.style.fontSize=`${t.fontSize}px`,e.style.fontWeight=t.fontWeight,e.style.color=t.color,e.style.webkitTextStroke=`${t.strokeWidth}px ${t.strokeColor}`,e.style.textShadow=`${t.shadowOffsetX}px ${t.shadowOffsetY}px ${t.shadowBlur}px ${t.shadowColor}`)}
+        function updateAllTextStyles(){Object.keys(textStyleCategories).forEach(e=>{const t=textStyleCategories[e].elements(),n=settings.textStyles[e];t.forEach(t=>applyStylesToElement(t,n))})}
+        function createEventElement(e,t,n){const o=document.createElement("div");o.className="flex items-center gap-4";const s=document.createElement("div");s.className="event-item py-4 border-b border-white/20 flex-grow";let a="price",l="default";e.isFree?(a="priceFree",l="free"):!e.priceText||"TBA"!==e.priceText.toUpperCase()||(a="priceTba",l="tba");let r=e.location;settings.autoShortenLocation&&r.length>40&&(r=r.substring(0,37)+"...");const i=n?`\n                <div class="action-buttons flex flex-col gap-2 z-30">\n                    <button data-action="remove" data-index="${t}" title="Remove Event" class="text-gray-400 hover:text-red-500 transition-colors">\n                        <svg class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>\n                    </button>\n                </div>\n                `:"";return s.innerHTML=`\n                <div class="flex justify-between items-start gap-4">\n                    <h3 class="event-item-name break-words min-w-0" contenteditable="true" data-index="${t}" data-field="name">${e.name}</h3>\n                    <p class="event-item-price flex-shrink-0 pl-4" data-price-type="${l}" contenteditable="true" data-index="${t}" data-field="priceText">${e.priceText}</p>\n                </div>\n                <div class="mt-4">\n                    <div class="flex flex-wrap items-center gap-x-4">\n                        <span class="event-item-details-text" contenteditable="true" data-index="${t}" data-field="date">${e.date}</span>\n                        <span class="event-item-details-text text-gray-500">|</span>\n                        <span class="event-item-details-text" contenteditable="true" data-index="${t}" data-field="location" data-original-location="${e.location}">${r}</span>\n                        ${e.socialMedia?`<span class="event-item-details-text text-gray-500">|</span><span class="event-item-details-text" contenteditable="true" data-index="${t}" data-field="socialMedia">${e.socialMedia}</span>`:""}\n                    </div>\n                </div>\n            `,applyStylesToElement(s.querySelector(".event-item-name"),settings.textStyles.eventName),s.querySelectorAll(".event-item-details-text").forEach(e=>applyStylesToElement(e,settings.textStyles.eventDetails)),applyStylesToElement(s.querySelector(".event-item-price"),settings.textStyles[a]),o.appendChild(s),n&&(()=>{const e=document.createElement("div");e.innerHTML=i,o.appendChild(e)})(),o}
+        const renderEventsInPreview=()=>{previewListContainer.innerHTML="",0===events.length?previewListContainer.innerHTML='<div class="p-8 text-center text-gray-500"><h3 class="text-4xl font-bold">No events yet.</h3><p class="text-3xl mt-2">Use the form to add one!</p></div>':(events.forEach((e,t)=>{const n=createEventElement(e,t,!0);previewListContainer.appendChild(n)}),updateAllTextStyles())};
+        function updateFormControls(){posterSizeSelect.value=settings.posterSize,posterTitleInput.value=settings.title,posterSubtitleInput.value=settings.subtitle,posterBackgroundSelect.value=settings.background,posterFooterInput.value=settings.footer,eventsPerPageInput.value=settings.eventsPerPage,eventsPerPageContainer.style.display=settings.autoPaginate?"none":"block",autoPaginateCheckbox.checked=settings.autoPaginate,autoShortenLocationCheckbox.checked=settings.autoShortenLocation,showTimestampCheckbox.checked=settings.showTimestamp,showUrlCheckbox.checked=settings.showUrl,gSheetUrlInput.value=settings.gSheetUrl,gradientStartColorInput.value=settings.customGradient.start,gradientEndColorInput.value=settings.customGradient.end,backgroundBlurSlider.value=settings.backgroundBlur,overlayTypeSelect.value=settings.overlayType,overlayColorInput.value=settings.overlayColor,overlayGradientStartInput.value=settings.overlayGradient.start,overlayGradientEndInput.value=settings.overlayGradient.end,overlayGradientDirectionSlider.value=settings.overlayGradient.direction,overlayOpacitySlider.value=settings.overlayOpacity,textStyleCategorySelect.innerHTML=Object.keys(textStyleCategories).map(e=>`<option value="${e}">${textStyleCategories[e].label}</option>`).join(""),fontFamilySelect.innerHTML=Object.keys(availableFonts).map(e=>`<option value="${e}">${availableFonts[e]}</option>`).join(""),populateTextStyleEditor()}
+        function updatePosterLook(){"1080x1350"===settings.posterSize?(posterContent.classList.remove("size-story"),posterContent.classList.add("size-post")):(posterContent.classList.remove("size-post"),posterContent.classList.add("size-story"));updatePreviewSize(),previewTitle.textContent=settings.title,previewSubtitle.textContent=settings.subtitle,previewFooter.textContent=settings.footer,customGradientControls.classList.toggle("hidden","custom-gradient"!==settings.background),imageBackgroundControls.classList.toggle("hidden","image"!==settings.background),posterBackgroundImage.style.filter=`blur(${settings.backgroundBlur}px)`,"image"===settings.background?(posterBackgroundImage.style.backgroundImage=currentImageObjectUrl?`url(${currentImageObjectUrl})`:"none",updateOverlay()):(posterBackgroundImage.style.backgroundImage="none",posterBackgroundImage.style.filter="none",posterBackgroundOverlay.style.backgroundImage="custom-gradient"===settings.background?`linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`:gradients[settings.background],posterBackgroundOverlay.style.backgroundColor="transparent",posterBackgroundOverlay.style.opacity=1),previewTimestamp.style.display="none",previewUrl.style.display="none",updateAllTextStyles()}
+        function updateOverlay(){const e=posterBackgroundOverlay;if("image"!==settings.background||"none"===settings.overlayType)return e.style.backgroundImage="none",void(e.style.opacity=0);e.style.opacity=settings.overlayOpacity;"solid"===settings.overlayType?e.style.backgroundImage=`linear-gradient(${settings.overlayColor}, ${settings.overlayColor})`:"gradient"===settings.overlayType&&(e.style.backgroundImage=`linear-gradient(${settings.overlayGradient.direction}deg, ${settings.overlayGradient.start}, ${settings.overlayGradient.end})`)}
         
-        function updateAllTextStyles() {
-            Object.keys(textStyleCategories).forEach(key => {
-                const category = textStyleCategories[key];
-                const elements = category.elements();
-                const styles = settings.textStyles[key];
-                elements.forEach(el => applyStylesToElement(el, styles));
-            });
-        }
+        // --- LOGIC ---
+        const formatPrice=e=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",minimumFractionDigits:0,maximumFractionDigits:0}).format(e);
+        const parseDate=e=>{if(!e||"TBA"===e.toUpperCase())return null;const t=e.split("/");if(3!==t.length)return null;const[n,o,s]=t.map(Number);return isNaN(n)||isNaN(o)||isNaN(s)?null:new Date(s,o-1,n)};
+        const sortEvents=()=>events.sort((e,t)=>{const n=parseDate(e.date),o=parseDate(t.date);return null===n&&null===o?0:null===n?1:null===o?-1:n-o});
+        async function addEvent(e){e.preventDefault();let t;isFreeCheckbox.checked?t="Free":isTbaCheckbox.checked?t="TBA":t=""===eventPriceInput.value.trim()?"TBA":formatPrice(parseFloat(eventPriceInput.value));const n={name:eventNameInput.value,date:isDateTbaCheckbox.checked?"TBA":eventDateInput.value,location:eventLocationInput.value,socialMedia:eventSocialInput.value,priceText:t,isFree:isFreeCheckbox.checked};events.push(n),sortEvents(),await saveState(),renderEventsInPreview(),eventForm.reset(),togglePriceInput(),toggleDateInput()}
+        function handleListInteraction(e){const t=e.target.closest('button[data-action]');if(t){const n=t.dataset.action,o=parseInt(t.dataset.index,10);"remove"===n&&(events.splice(o,1),saveState(),renderEventsInPreview())}}
+        function clearAllEvents(){0!==events.length&&showConfirm("Clear All Events","Are you sure you want to delete all events? This action cannot be undone.",async()=>{events=[],await saveState(),renderEventsInPreview()})}
+        function togglePriceInput(e=null){"free"===e&&isFreeCheckbox.checked?(isTbaCheckbox.checked=!1,eventPriceInput.disabled=!0,eventPriceInput.value=""):"tba"===e&&isTbaCheckbox.checked?(isFreeCheckbox.checked=!1,eventPriceInput.disabled=!0,eventPriceInput.value=""):"input"===e?(isFreeCheckbox.checked=!1,isTbaCheckbox.checked=!1,eventPriceInput.disabled=!1):isFreeCheckbox.checked||isTbaCheckbox.checked||(eventPriceInput.disabled=!1)}
+        function toggleDateInput(){isDateTbaCheckbox.checked?(eventDateInput.disabled=!0,eventDateInput.value="TBA",datepickerInstance&&datepickerInstance.hide()):(eventDateInput.disabled=!1,eventDateInput.value="")}
 
-        const createEventElement = (event, index, showActionButtons) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'flex items-center gap-4';
-
-            const eventElement = document.createElement('div');
-            eventElement.className = 'event-item py-4 border-b border-white/20 flex-grow';
-            
-            let priceStyleKey = 'price';
-            let priceType = 'default';
-            if (event.isFree) {
-                priceStyleKey = 'priceFree';
-                priceType = 'free';
-            } else if ((event.priceText || '').toUpperCase() === 'TBA') {
-                priceStyleKey = 'priceTba';
-                priceType = 'tba';
-            }
-            
-            let locationText = event.location;
-            if(settings.autoShortenLocation && locationText.length > 40) {
-                 locationText = locationText.substring(0, 37) + '...';
-            }
-
-            const actionButtonsHtml = showActionButtons 
-                ? `
-                <div class="action-buttons flex flex-col gap-2 z-30">
-                    <button data-action="remove" data-index="${index}" title="Remove Event" class="text-gray-400 hover:text-red-500 transition-colors">
-                        <svg class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
-                    </button>
-                </div>
-                ` : '';
-            
-            eventElement.innerHTML = `
-                <div class="flex justify-between items-start gap-4">
-                    <h3 class="event-item-name break-words min-w-0" contenteditable="true" data-index="${index}" data-field="name">${event.name}</h3>
-                    <p class="event-item-price flex-shrink-0 pl-4" data-price-type="${priceType}" contenteditable="true" data-index="${index}" data-field="priceText">${event.priceText}</p>
-                </div>
-                <div class="mt-4">
-                    <div class="flex flex-wrap items-center gap-x-4">
-                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="date">${event.date}</span>
-                        <span class="event-item-details-text text-gray-500">|</span>
-                        <span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="location" data-original-location="${event.location}">${locationText}</span>
-                        ${event.socialMedia ? `<span class="event-item-details-text text-gray-500">|</span><span class="event-item-details-text" contenteditable="true" data-index="${index}" data-field="socialMedia">${event.socialMedia}</span>` : ''}
-                    </div>
-                </div>
-            `;
-            
-            // Apply styles after innerHTML is set
-            applyStylesToElement(eventElement.querySelector('.event-item-name'), settings.textStyles.eventName);
-            eventElement.querySelectorAll('.event-item-details-text').forEach(el => applyStylesToElement(el, settings.textStyles.eventDetails));
-            applyStylesToElement(eventElement.querySelector('.event-item-price'), settings.textStyles[priceStyleKey]);
-            
-
-            wrapper.appendChild(eventElement);
-            if(showActionButtons) {
-                 const buttonsDiv = document.createElement('div');
-                 buttonsDiv.innerHTML = actionButtonsHtml;
-                 wrapper.appendChild(buttonsDiv);
-            }
-
-            return wrapper;
-        };
-
-        const renderEventsInPreview = () => {
-            previewListContainer.innerHTML = '';
-            
-            if (events.length === 0) {
-                previewListContainer.innerHTML = `<div class="p-8 text-center text-gray-500"><h3 class="text-4xl font-bold">No events yet.</h3><p class="text-3xl mt-2">Use the form to add one!</p></div>`;
-                return;
-            }
-            events.forEach((event, index) => {
-                const eventElement = createEventElement(event, index, true);
-                previewListContainer.appendChild(eventElement);
-            });
-            updateAllTextStyles(); // Re-apply styles to headers/footers which are not in the loop
-        };
-
-        function updateFormControls() {
-            posterSizeSelect.value = settings.posterSize;
-            posterTitleInput.value = settings.title;
-            posterSubtitleInput.value = settings.subtitle;
-            posterBackgroundSelect.value = settings.background;
-            posterFooterInput.value = settings.footer;
-            eventsPerPageInput.value = settings.eventsPerPage;
-            eventsPerPageContainer.style.display = settings.autoPaginate ? 'none' : 'block';
-            autoPaginateCheckbox.checked = settings.autoPaginate;
-            autoShortenLocationCheckbox.checked = settings.autoShortenLocation;
-            showTimestampCheckbox.checked = settings.showTimestamp;
-            showUrlCheckbox.checked = settings.showUrl;
-            gSheetUrlInput.value = settings.gSheetUrl;
-            gradientStartColorInput.value = settings.customGradient.start;
-            gradientEndColorInput.value = settings.customGradient.end;
-            
-            // Populate text style editor dropdowns
-            textStyleCategorySelect.innerHTML = Object.keys(textStyleCategories).map(key => `<option value="${key}">${textStyleCategories[key].label}</option>`).join('');
-            fontFamilySelect.innerHTML = Object.keys(availableFonts).map(key => `<option value="${key}">${availableFonts[key]}</option>`).join('');
-            
-            populateTextStyleEditor(); // Populate with the first category's style
-        }
-        
-        function updateDynamicRecommendations() {
-             if (settings.posterSize === '1080x1350') {
-                 eventsPerPageRecommendation.textContent = 'Recommended: 5 for 4:5 size.';
-            } else {
-                 eventsPerPageRecommendation.textContent = 'Recommended: 9 for Story size.';
-            }
-        }
-
-        function updatePosterLook() {
-            // Update size-related classes
-            if (settings.posterSize === '1080x1350') {
-                posterContent.classList.remove('size-story');
-                posterContent.classList.add('size-post');
-            } else {
-                posterContent.classList.remove('size-post');
-                posterContent.classList.add('size-story');
-            }
-            updatePreviewSize();
-            updateDynamicRecommendations();
-
-            // Update text content from settings
-            previewTitle.textContent = settings.title;
-            previewSubtitle.textContent = settings.subtitle;
-            previewFooter.textContent = settings.footer;
-            
-            // Toggle control visibility
-            customGradientControls.classList.toggle('hidden', settings.background !== 'custom-gradient');
-            imageBackgroundControls.classList.toggle('hidden', settings.background !== 'image');
-
-            // Apply background styles
-            posterBackgroundImage.style.filter = `blur(${settings.backgroundBlur}px)`;
-            
-            if (settings.background === 'image') {
-                posterBackgroundImage.style.backgroundImage = currentImageObjectUrl ? `url(${currentImageObjectUrl})` : 'none';
-                posterBackgroundOverlay.style.backgroundImage = 'none';
-                posterBackgroundOverlay.style.backgroundColor = settings.overlayColor;
-                posterBackgroundOverlay.style.opacity = settings.overlayOpacity;
-            } else {
-                 posterBackgroundImage.style.backgroundImage = 'none';
-                 posterBackgroundImage.style.filter = 'none';
-                 const gradient = settings.background === 'custom-gradient'
-                    ? `linear-gradient(to bottom right, ${settings.customGradient.start}, ${settings.customGradient.end})`
-                    : gradients[settings.background];
-                posterBackgroundOverlay.style.backgroundImage = gradient;
-                posterBackgroundOverlay.style.backgroundColor = 'transparent';
-                posterBackgroundOverlay.style.opacity = 1;
-            }
-            
-            previewTimestamp.style.display = 'none';
-            previewUrl.style.display = 'none';
-
-            // Apply all text styles
-            updateAllTextStyles();
-        }
-
-        // --- EVENT HANDLERS & LOGIC ---
-        function formatPrice(price) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
-        }
-        
-        const parseDate = (dateStr) => {
-            if (!dateStr || dateStr.toUpperCase() === 'TBA') return null; // Handle TBA dates
-            const parts = dateStr.split('/');
-            if (parts.length !== 3) return null;
-            const [day, month, year] = parts.map(Number);
-            if(isNaN(day) || isNaN(month) || isNaN(year)) return null;
-            return new Date(year, month - 1, day);
-        };
-        
-        const sortEvents = () => {
-            events.sort((a, b) => {
-                const dateA = parseDate(a.date);
-                const dateB = parseDate(b.date);
-
-                if (dateA === null && dateB === null) return 0; // Both are TBA
-                if (dateA === null) return 1; // a is TBA, put it last
-                if (dateB === null) return -1; // b is TBA, put it last
-
-                return dateA - dateB;
-            });
-        };
-
-        async function addEvent(e) {
-            e.preventDefault();
-            
-            let priceText;
-            if (isFreeCheckbox.checked) {
-                priceText = 'Free';
-            } else if (isTbaCheckbox.checked) {
-                priceText = 'TBA';
-            } else {
-                 const priceValueStr = eventPriceInput.value.trim();
-                 priceText = priceValueStr === '' ? 'TBA' : formatPrice(parseFloat(priceValueStr));
-            }
-
-            const newEvent = {
-                name: eventNameInput.value,
-                date: isDateTbaCheckbox.checked ? 'TBA' : eventDateInput.value,
-                location: eventLocationInput.value,
-                socialMedia: eventSocialInput.value,
-                priceText: priceText,
-                isFree: isFreeCheckbox.checked
-            };
-
-            events.push(newEvent);
-            sortEvents();
-            await saveState();
-            renderEventsInPreview();
-            eventForm.reset();
-            togglePriceInput();
-            toggleDateInput();
-        }
-
-        function handleListInteraction(e) {
-            const button = e.target.closest('button[data-action]');
-            if (!button) return;
-
-            const action = button.dataset.action;
-            const index = parseInt(button.dataset.index, 10);
-
-            if (action === 'remove') {
-                events.splice(index, 1);
-                saveState();
-                renderEventsInPreview();
-            }
-        }
-        
-        function clearAllEvents() {
-            if (events.length === 0) return;
-            showConfirm('Clear All Events', 'Are you sure you want to delete all events? This action cannot be undone.', async () => {
-                events = [];
-                await saveState();
-                renderEventsInPreview();
-            });
-        }
-
-        function togglePriceInput(initiator = null) {
-            if (initiator === 'free' && isFreeCheckbox.checked) {
-                isTbaCheckbox.checked = false;
-                eventPriceInput.disabled = true;
-                eventPriceInput.value = '';
-            } else if (initiator === 'tba' && isTbaCheckbox.checked) {
-                 isFreeCheckbox.checked = false;
-                 eventPriceInput.disabled = true;
-                 eventPriceInput.value = '';
-            } else if (initiator === 'input') {
-                 isFreeCheckbox.checked = false;
-                 isTbaCheckbox.checked = false;
-                 eventPriceInput.disabled = false;
-            } else if (!isFreeCheckbox.checked && !isTbaCheckbox.checked){
-                 eventPriceInput.disabled = false;
-            }
-        }
-
-        function toggleDateInput() {
-            if (isDateTbaCheckbox.checked) {
-                eventDateInput.disabled = true;
-                eventDateInput.value = "TBA";
-                if(datepickerInstance) datepickerInstance.hide();
-            } else {
-                eventDateInput.disabled = false;
-                eventDateInput.value = "";
-            }
-        }
-        
+        // --- DATA I/O ---
         async function exportData() {
-            if (events.length === 0) {
-                showAlert('Cannot Export', 'There are no events to export. Please add at least one event.');
-                return;
-            }
-            
+            if (events.length === 0) return showAlert('Cannot Export', 'There are no events to export.');
             const includeImage = exportWithImageCheckbox.checked;
-            let exportableSettings = JSON.parse(JSON.stringify(settings)); // Deep clone to avoid mutation
-
+            let exportableSettings = JSON.parse(JSON.stringify(settings));
             if (includeImage && settings.backgroundImage instanceof Blob) {
-                const toBase64 = file => new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                });
-                exportableSettings.backgroundImage = await toBase64(settings.backgroundImage);
+                exportableSettings.backgroundImage = await (e => new Promise((t, n) => {
+                    const o = new FileReader; o.readAsDataURL(e); o.onload = () => t(o.result); o.onerror = e => n(e)
+                }))(settings.backgroundImage);
             } else {
-                // If not including image or if it's not a blob, nullify it
                 exportableSettings.backgroundImage = null;
             }
-
             const dataStr = JSON.stringify({ events, settings: exportableSettings }, null, 2);
             const dataBlob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(dataBlob);
@@ -1188,598 +589,88 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
-
         async function importData(e) {
             const file = e.target.files[0];
             if (!file) return;
-            const fileName = file.name.toLowerCase();
-
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async (e) => {
                 try {
-                    let importedState = null;
                     let importedEvents = null;
-
-                    if (fileName.endsWith('.json')) {
-                        importedState = JSON.parse(e.target.result);
+                    if (file.name.toLowerCase().endsWith(".json")) {
+                        const importedState = JSON.parse(e.target.result);
                         if (importedState && importedState.settings) {
-                           importedEvents = importedState.events || [];
-                            const loadedSettings = importedState.settings;
-                            settings = { ...settings, ...loadedSettings };
+                            importedEvents = importedState.events || [];
+                            settings = { ...defaultSettings, ...importedState.settings };
                             if (typeof settings.backgroundImage === 'string' && settings.backgroundImage.startsWith('data:image')) {
-                                 const fetchRes = await fetch(settings.backgroundImage);
-                                 settings.backgroundImage = await fetchRes.blob();
-                            } else {
-                                settings.backgroundImage = null;
+                                settings.backgroundImage = await (await fetch(settings.backgroundImage)).blob();
                             }
-                        } else {
-                             showAlert('Import Error', 'Invalid JSON file format.');
-                             return;
-                        }
-                    } else if (fileName.endsWith('.csv')) {
-                         const csvText = e.target.result;
-                         await new Promise((resolve, reject) => {
-                             findAndProcessCsv(csvText, (results) => {
-                                const parsedEvents = parseCsvData(results);
-                                if(parsedEvents) {
-                                    importedEvents = parsedEvents;
-                                    resolve();
-                                } else {
-                                    reject(new Error("CSV parsing failed.")); 
-                                }
+                        } else { showAlert('Import Error', 'Invalid JSON file format.'); }
+                    } else if (file.name.toLowerCase().endsWith(".csv")) {
+                        await new Promise((resolve, reject) => {
+                            findAndProcessCsv(e.target.result, (results) => {
+                                const parsed = parseCsvData(results);
+                                if (parsed) { importedEvents = parsed; resolve(); }
+                                else { reject(new Error("CSV parsing failed.")); }
                             });
                         });
                     }
-                    
                     if (importedEvents !== null) {
-                        events = importedEvents;
-                        if (!settings.textStyles) settings.textStyles = JSON.parse(JSON.stringify(defaultTextStyles));
-                        if (!settings.customGradient) settings.customGradient = { start: "#1f2937", end: "#111827" };
-
-                        sortEvents();
-                        await saveState();
-                        await loadState(); // Reload to create new object URL for the image
-                        updateFormControls();
-                        updatePosterLook();
-                        renderEventsInPreview();
+                        events = importedEvents; sortEvents(); await saveState(); await loadState();
+                        updateFormControls(); updatePosterLook(); renderEventsInPreview();
                         showStatusMessage('Data imported successfully!');
                     }
-                } catch (error) {
-                    console.error("Error parsing imported file:", error);
-                    if (error.message !== "CSV parsing failed.") {
-                        showAlert('Import Error', 'Could not read or parse the selected file.');
-                    }
-                }
+                } catch (error) { console.error("Error parsing file:", error); showAlert('Import Error', 'Could not read file.'); }
             };
             reader.readAsText(file);
             importInput.value = '';
         }
-
-        function findAndProcessCsv(csvText, onComplete) {
-            const lines = csvText.split('\n');
-            let headerRowIndex = -1;
-            
-            const oldHeadersSample = ['name', 'date'];
-            const newHeadersSample = ['tanggal', 'event'];
-
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].toLowerCase().trim();
-                const hasOld = oldHeadersSample.every(h => line.includes(h));
-                const hasNew = newHeadersSample.every(h => line.includes(h));
-                if (hasOld || hasNew) {
-                    headerRowIndex = i;
-                    break;
-                }
-            }
-
-            if (headerRowIndex === -1) {
-                showAlert('CSV Error', 'Could not find a valid header row. Please ensure columns like "name", "date" or "Tanggal", "Event" exist.');
-                onComplete({ data: [], errors: [{message: "Header not found"}]});
-                return;
-            }
-
-            const csvDataFromHeaders = lines.slice(headerRowIndex).join('\n');
-            
-            Papa.parse(csvDataFromHeaders, {
-                header: true,
-                skipEmptyLines: true,
-                complete: onComplete
-            });
-        }
+        function findAndProcessCsv(e,t){const n=e.split("\n");let o=-1;const s=["name","date"],a=["tanggal","event"];for(let l=0;l<n.length;l++){const r=n[l].toLowerCase().trim(),i=s.every(e=>r.includes(e)),c=a.every(e=>r.includes(e));if(i||c){o=l;break}}-1===o?(showAlert("CSV Error",'Could not find a valid header row. Please ensure columns like "name", "date" or "Tanggal", "Event" exist.'),t({data:[],errors:[{message:"Header not found"}]})):Papa.parse(n.slice(o).join("\n"),{header:!0,skipEmptyLines:!0,complete:t})}
+        function parseCsvData(e){if(e.errors.length>0&&e.errors.some(e=>"TooManyFields"!==e.code&&"TooFewFields"!==e.code))return console.error("CSV Parsing Errors:",e.errors),showAlert("Parsing Error","Could not parse the CSV data. Please check the file format."),null;const t=e.meta.fields.map(e=>e.trim().toLowerCase()),n=["name","date","location","socialmedia","pricetext","isfree"],o=["tanggal","event","lokasi","ticket","link event"],s=n.every(e=>t.includes(e)),a=o.every(e=>t.includes(e));if(!s&&!a){const l=n.filter(e=>!t.includes(e)),r=o.filter(e=>!t.includes(e));let i="The CSV is missing required columns. ";return i+=l.length<r.length?`Standard format is missing: ${l.join(", ")}.`:`Custom format is missing: ${r.join(", ")}.`,showAlert("Incorrect Columns",i),null}const l=a;return e.data.map(e=>{const t={};for(const n in e)t[n.trim().toLowerCase()]=e[n];if(l){const n={januari:"01",january:"01",februari:"02",february:"02",maret:"03",march:"03",april:"04",mei:"05",may:"05",juni:"06",june:"06",juli:"07",july:"07",agustus:"08",august:"08",september:"09",oktober:"10",october:"10",november:"11",desember:"12",december:"12"},o=(t.tanggal||"").trim();let s=o;if("TBA"!==o.toUpperCase()&&o){const a=o.split(" ");3===a.length&&(()=>{const l=a[0].padStart(2,"0"),r=n[a[1].toLowerCase()],i=a[2];l&&r&&i&&(s=`${l}/${r}/${i}`)})()}else s="TBA";let a=(t.ticket||"").trim(),r=!1;const i=a.toUpperCase();if("FREE"===i)r=!0;else if("TBA"!==i)if(i.includes("-")){const c=i.split("-")[0].trim(),d=1e3*parseFloat(c.replace("K",""));isNaN(d)||(a=formatPrice(d)+"+")}else i.endsWith("K")?(()=>{const u=1e3*parseFloat(i.replace("K",""));isNaN(u)||(a=formatPrice(u))})():isNaN(parseFloat(a))||(a=formatPrice(parseFloat(a)));const c=(t["link event"]||"").trim();let d=c;if(c)try{const p=new URL(c),m=p.pathname.split("/").filter(Boolean);d=m.pop()||""}catch(e){}return d&&!d.startsWith("@")&&(d="@"+d),{name:t.event||"",date:s,location:t.lokasi||"",socialMedia:d,priceText:a,isFree:r}}return{name:t.name||"",date:t.date||"",location:t.location||"",socialMedia:t.socialmedia||"",priceText:t.pricetext||"",isFree:"TRUE"===String(t.isfree).toUpperCase()}})}
         
-        function parseCsvData(results) {
-            if (results.errors.length > 0 && results.errors.some(e => e.code !== 'TooManyFields' && e.code !== 'TooFewFields')) {
-                console.error("CSV Parsing Errors:", results.errors);
-                showAlert('Parsing Error', 'Could not parse the CSV data. Please check the file format.');
-                return null;
-            }
-            
-            const actualHeaders = results.meta.fields.map(h => h.trim().toLowerCase());
-            
-            const oldHeaders = ['name', 'date', 'location', 'socialmedia', 'pricetext', 'isfree'];
-            const newHeaders = ['tanggal', 'event', 'lokasi', 'ticket', 'link event'];
-            
-            const hasOldHeaders = oldHeaders.every(h => actualHeaders.includes(h));
-            const hasNewHeaders = newHeaders.every(h => actualHeaders.includes(h));
-
-            if (!hasOldHeaders && !hasNewHeaders) {
-                const missingOld = oldHeaders.filter(h => !actualHeaders.includes(h));
-                const missingNew = newHeaders.filter(h => !actualHeaders.includes(h));
-                let errorMessage = 'The CSV is missing required columns. ';
-
-                if (missingOld.length < missingNew.length) {
-                    errorMessage += `Standard format is missing: ${missingOld.join(', ')}.`;
-                } else {
-                    errorMessage += `Custom format is missing: ${missingNew.join(', ')}.`;
-                }
-                 showAlert('Incorrect Columns', errorMessage);
-                 return null;
-            }
-
-            const isNewFormat = hasNewHeaders;
-
-            const parsedEvents = results.data.map(row => {
-                const lowerCaseRow = {};
-                for (const key in row) {
-                    lowerCaseRow[key.trim().toLowerCase()] = row[key];
-                }
-
-                if (isNewFormat) {
-                    const monthMap = { 
-                        'januari': '01', 'january': '01',
-                        'februari': '02', 'february': '02',
-                        'maret': '03', 'march': '03',
-                        'april': '04', 
-                        'mei': '05', 'may': '05',
-                        'juni': '06', 'june': '06',
-                        'juli': '07', 'july': '07',
-                        'agustus': '08', 'august': '08',
-                        'september': '09', 
-                        'oktober': '10', 'october': '10',
-                        'november': '11', 
-                        'desember': '12', 'december': '12'
-                    };
-                    const dateStr = (lowerCaseRow['tanggal'] || '').trim();
-                    let formattedDate = dateStr; 
-                    
-                    if (dateStr.toUpperCase() !== 'TBA' && dateStr) {
-                        const dateParts = dateStr.split(' ');
-                        if (dateParts.length === 3) {
-                            const day = dateParts[0].padStart(2, '0');
-                            const month = monthMap[dateParts[1].toLowerCase()];
-                            const year = dateParts[2];
-                            if (day && month && year) {
-                                formattedDate = `${day}/${month}/${year}`;
-                            }
-                        }
-                    } else {
-                        formattedDate = 'TBA';
-                    }
-
-                    let ticketValue = (lowerCaseRow['ticket'] || '').trim();
-                    let isTicketFree = false;
-                    const ticketUpper = ticketValue.toUpperCase();
-
-                    if (ticketUpper === 'FREE') {
-                        isTicketFree = true;
-                    } else if (ticketUpper !== 'TBA') {
-                        if (ticketUpper.includes('-')) {
-                            const firstValue = ticketUpper.split('-')[0].trim();
-                            const number = parseFloat(firstValue.replace('K', '')) * 1000;
-                            if (!isNaN(number)) {
-                                ticketValue = formatPrice(number) + "+";
-                            }
-                        } else if (ticketUpper.endsWith('K')) {
-                            const number = parseFloat(ticketUpper.replace('K', '')) * 1000;
-                            if (!isNaN(number)) {
-                                ticketValue = formatPrice(number);
-                            }
-                        } else if (!isNaN(parseFloat(ticketValue))) {
-                            ticketValue = formatPrice(parseFloat(ticketValue));
-                        }
-                    }
-                    
-
-                    const socialValue = (lowerCaseRow['link event'] || '').trim();
-                    let socialHandle = socialValue;
-
-                    if (socialValue) {
-                        try {
-                            const url = new URL(socialValue);
-                            const pathParts = url.pathname.split('/').filter(Boolean);
-                            socialHandle = pathParts.pop() || '';
-                        } catch (e) { }
-                        if (socialHandle && !socialHandle.startsWith('@')) {
-                            socialHandle = '@' + socialHandle;
-                        }
-                    }
-                    
-                    return {
-                        name: lowerCaseRow['event'] || '',
-                        date: formattedDate,
-                        location: lowerCaseRow['lokasi'] || '',
-                        socialMedia: socialHandle,
-                        priceText: ticketValue,
-                        isFree: isTicketFree
-                    };
-
-                } else {
-                    return {
-                        name: lowerCaseRow.name || '',
-                        date: lowerCaseRow.date || '',
-                        location: lowerCaseRow.location || '',
-                        socialMedia: lowerCaseRow.socialmedia || '',
-                        priceText: lowerCaseRow.pricetext || '',
-                        isFree: String(lowerCaseRow.isfree).toUpperCase() === 'TRUE'
-                    };
-                }
-            });
-
-            return parsedEvents;
-        }
+        // --- DIRECT EDIT & STYLE ---
+        const settingToInputMap={title:posterTitleInput,subtitle:posterSubtitleInput,footer:posterFooterInput};
+        function handleDirectEdit(e){const t=e.target;if(t&&t.isContentEditable){const n=t.dataset.setting;if(n){const o=t.textContent.trim();settings[n]!==o&&(settings[n]=o,settingToInputMap[n].value=o,debouncedSaveState())}else if(t.dataset.field){const s=parseInt(t.dataset.index,10),a=t.dataset.field,l=t.textContent.trim();if(events[s])if("priceText"===a){const r=l.toUpperCase();let i;"FREE"===r?(i="Free",events[s].isFree=!0):"TBA"===r?(i="TBA",events[s].isFree=!1):(()=>{const c=parseFloat(l.replace(/[^0-9]/g,""));isNaN(c)?(i="TBA",events[s].isFree=!1):(i=formatPrice(c),events[s].isFree=!1)})();events[s].priceText!==i&&(events[s].priceText=i,debouncedSaveState(),renderEventsInPreview())}else"date"===a?events[s][a]!==l&&(events[s][a]=l,sortEvents(),debouncedSaveState(),renderEventsInPreview()):events[s][a]!==l&&(events[s][a]=l,debouncedSaveState())}}}
+        function preventLineBreaks(e){e.target.isContentEditable&&"Enter"===e.key&&(e.preventDefault(),e.target.blur())}
+        async function getProcessedImage(){if(!(settings.backgroundImage instanceof Blob))return null;if(0===settings.backgroundBlur)return currentImageObjectUrl;const e=await createImageBitmap(settings.backgroundImage),t=document.createElement("canvas");t.width=e.width,t.height=e.height;const n=t.getContext("2d");return n.filter=`blur(${settings.backgroundBlur}px)`,n.drawImage(e,0,0),t.toDataURL()}
+        async function downloadImage(){if(0===events.length)return void showAlert("Cannot Download","Please add at least one event before downloading.");loadingIndicator.classList.remove("hidden"),downloadBtn.disabled=!0;const e=e=>new Promise(t=>setTimeout(t,e)),[t,n]=settings.posterSize.split("x").map(Number);let o=[];if(settings.autoPaginate){loadingIndicator.textContent="Calculating page layout...",await e(50);const s=posterContent.cloneNode(!0);s.style.position="absolute",s.style.left="-9999px",s.style.visibility="hidden",document.body.appendChild(s);const a=s.querySelector(".event-list-container"),l=a.clientHeight;let r=[...events];for(;r.length>0;){let i=[],c=0;for(a.innerHTML="";c<r.length;c++){const d=r[c],p=createEventElement(d,c,!1);if(a.appendChild(p),a.scrollHeight>l){0===i.length&&i.push(d);break}i.push(d)}o.push(i),r.splice(0,i.length)}document.body.removeChild(s)}else{const u=parseInt(eventsPerPageInput.value,10)||9;for(let m=0;m<events.length;m+=u)o.push(events.slice(m,m+u))}let h=null;if("image"===settings.background&&settings.backgroundImage&&(loadingIndicator.textContent="Processing background...",h=await getProcessedImage()),o.length>0)for(let g=0;g<o.length;g++){const f=g+1;loadingIndicator.textContent=`Generating image ${f} of ${o.length}...`;const y=o[g],v=posterContent.cloneNode(!0);v.querySelectorAll('[contenteditable="true"]').forEach(e=>e.setAttribute("contenteditable","false"));const E=v.querySelector("#poster-background-image");E.style.filter="none",h&&(E.style.backgroundImage=`url(${h})`);const S=v.querySelector(".event-list-container");S.innerHTML="",y.forEach((e,t)=>{const n=createEventElement(e,t,!1);S.appendChild(n)});const b=v.querySelector("#preview-timestamp");settings.showTimestamp?(b.textContent=`Generated on: ${(new Date).toLocaleString()}`,b.style.display="block"):(b.style.display="none");const L=v.querySelector("#preview-url");settings.showUrl?(L.textContent=window.location.href,L.style.display="block"):(L.style.display="none"),v.style.position="absolute",v.style.top="-9999px",document.body.appendChild(v);try{await e(200);const C=await html2canvas(v,{scale:1,useCORS:!0,logging:!1,backgroundColor:null,width:t,height:n,windowWidth:t,windowHeight:n}),A=document.createElement("a");A.download=`event-poster-${f}.png`,A.href=C.toDataURL("image/png"),A.click(),A.remove(),await e(500)}catch(k){console.error("Image generation failed:",k),showAlert("Image Generation Failed",`An error on image ${f}.`);break}finally{document.body.removeChild(v)}}loadingIndicator.classList.add("hidden"),loadingIndicator.textContent="Generating...",downloadBtn.disabled=!1}
+        function populateTextStyleEditor(){const e=textStyleCategorySelect.value,t=settings.textStyles[e];t&&(fontFamilySelect.value=t.fontFamily,textColorInput.value=t.color,fontSizeInput.value=t.fontSize,fontWeightInput.value=t.fontWeight,strokeColorInput.value=t.strokeColor,strokeWidthInput.value=t.strokeWidth.toFixed(1),shadowColorInput.value=t.shadowColor,shadowBlurInput.value=t.shadowBlur,shadowOffsetXInput.value=t.shadowOffsetX,shadowOffsetYInput.value=t.shadowOffsetY)}
+        function handleTextStyleChange(e,t){const n=textStyleCategorySelect.value;settings.textStyles[n][e]=t,updatePosterLook(),debouncedSaveState()}
         
-        // --- Direct Canvas Edit Handlers ---
-        const settingToInputMap = {
-            title: posterTitleInput,
-            subtitle: posterSubtitleInput,
-            footer: posterFooterInput
-        };
-
-        function handleDirectEdit(e) {
-            const element = e.target;
-            if (!element || !element.isContentEditable) return;
-            const key = element.dataset.setting;
-            
-            if (key) {
-                const newValue = element.textContent.trim();
-                if (settings[key] !== newValue) {
-                    settings[key] = newValue;
-                    settingToInputMap[key].value = newValue;
-                    debouncedSaveState();
-                }
-            } else if (element.dataset.field) {
-                 const index = parseInt(element.dataset.index, 10);
-                 const field = element.dataset.field;
-                 const newValue = element.textContent.trim();
-                
-                 if (!events[index]) return;
-
-                 if (field === 'priceText') {
-                       const upperCaseValue = newValue.toUpperCase();
-                       let newPriceText;
-                       if (upperCaseValue === 'FREE') {
-                           newPriceText = 'Free';
-                           events[index].isFree = true;
-                       } else if (upperCaseValue === 'TBA') {
-                           newPriceText = 'TBA';
-                           events[index].isFree = false;
-                       } else {
-                           const numericValue = parseFloat(newValue.replace(/[^0-9]/g, ''));
-                           if (!isNaN(numericValue)) {
-                               newPriceText = formatPrice(numericValue);
-                               events[index].isFree = false;
-                           } else {
-                               newPriceText = 'TBA';
-                               events[index].isFree = false;
-                           }
-                       }
-                      
-                       if (events[index].priceText !== newPriceText) {
-                           events[index].priceText = newPriceText;
-                           debouncedSaveState();
-                           renderEventsInPreview(); 
-                       }
-                 } else if (field === 'date') {
-                     if (events[index][field] !== newValue) {
-                         events[index][field] = newValue;
-                         sortEvents();
-                         debouncedSaveState();
-                         renderEventsInPreview();
-                     }
-                 }
-                 else {
-                       if (events[index][field] !== newValue) {
-                           events[index][field] = newValue;
-                           debouncedSaveState();
-                       }
-                 }
-            }
-        }
-        
-        function preventLineBreaks(e) {
-            if (e.target.isContentEditable && e.key === 'Enter') {
-                e.preventDefault();
-                e.target.blur();
-            }
-        }
-        
-        // --- Image processing function ---
-        async function getProcessedImage() {
-            if (!(settings.backgroundImage instanceof Blob)) {
-                return null;
-            }
-             if (settings.backgroundBlur === 0) {
-                return currentImageObjectUrl;
-            }
-
-            const imageBitmap = await createImageBitmap(settings.backgroundImage);
-            const canvas = document.createElement('canvas');
-            canvas.width = imageBitmap.width;
-            canvas.height = imageBitmap.height;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.filter = `blur(${settings.backgroundBlur}px)`;
-            ctx.drawImage(imageBitmap, 0, 0);
-            
-            return canvas.toDataURL();
-        }
-
-
-        async function downloadImage() {
-            if (events.length === 0) {
-                showAlert('Cannot Download', "Please add at least one event before downloading.");
-                return;
-            }
-            
-            loadingIndicator.classList.remove('hidden');
-            downloadBtn.disabled = true;
-            downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-            const delay = ms => new Promise(res => setTimeout(res, ms));
-            const [width, height] = settings.posterSize.split('x').map(Number);
-            
-            let pageChunks = [];
-
-            if (settings.autoPaginate) {
-                loadingIndicator.textContent = 'Calculating page layout...';
-                await delay(50); // Allow UI to update
-                
-                const measureClone = posterContent.cloneNode(true);
-                measureClone.style.position = 'absolute';
-                measureClone.style.left = '-9999px';
-                measureClone.style.top = '-9999px';
-                measureClone.style.visibility = 'hidden';
-                document.body.appendChild(measureClone);
-                
-                const listContainer = measureClone.querySelector('.event-list-container');
-                const availableHeight = listContainer.clientHeight;
-                
-                let remainingEvents = [...events];
-                
-                while(remainingEvents.length > 0) {
-                    let currentChunk = [];
-                    listContainer.innerHTML = '';
-                    for (let i = 0; i < remainingEvents.length; i++) {
-                        const event = remainingEvents[i];
-                        const eventElement = createEventElement(event, i, false);
-                        listContainer.appendChild(eventElement);
-
-                        if(listContainer.scrollHeight > availableHeight) {
-                            if (currentChunk.length === 0) {
-                                currentChunk.push(event); 
-                            }
-                            break;
-                        }
-                        currentChunk.push(event);
-                    }
-                    pageChunks.push(currentChunk);
-                    remainingEvents.splice(0, currentChunk.length);
-                }
-
-                document.body.removeChild(measureClone);
-
-            } else {
-                 const eventsPerPage = parseInt(eventsPerPageInput.value, 10) || 9;
-                 for (let i = 0; i < events.length; i += eventsPerPage) {
-                    pageChunks.push(events.slice(i, i + eventsPerPage));
-                }
-            }
-            
-            // Pre-process the image once if needed
-            let processedImageUrl = null;
-            if(settings.background === 'image' && settings.backgroundImage) {
-                loadingIndicator.textContent = `Processing background image...`;
-                processedImageUrl = await getProcessedImage();
-            }
-
-
-            for (let i = 0; i < pageChunks.length; i++) {
-                const page = i + 1;
-                loadingIndicator.textContent = `Generating image ${page} of ${pageChunks.length}...`;
-                const chunk = pageChunks[i];
-
-                const posterClone = posterContent.cloneNode(true);
-                posterClone.querySelectorAll('[contenteditable="true"]').forEach(el => el.setAttribute('contenteditable', 'false'));
-                
-                // Remove the CSS filter from the clone to prevent conflicts
-                const cloneBgImage = posterClone.querySelector('#poster-background-image');
-                cloneBgImage.style.filter = 'none';
-
-                // Apply the pre-processed image to the clone
-                if (processedImageUrl) {
-                    cloneBgImage.style.backgroundImage = `url(${processedImageUrl})`;
-                }
-
-
-                const listInClone = posterClone.querySelector('.event-list-container');
-                listInClone.innerHTML = '';
-
-                chunk.forEach((event, index) => {
-                    const eventElement = createEventElement(event, index, false);
-                    listInClone.appendChild(eventElement);
-                });
-
-                const timestampEl = posterClone.querySelector('#preview-timestamp');
-                if (settings.showTimestamp) {
-                    timestampEl.textContent = `Generated on: ${new Date().toLocaleString()}`;
-                    timestampEl.style.display = 'block';
-                } else {
-                    timestampEl.style.display = 'none';
-                }
-                
-                const urlEl = posterClone.querySelector('#preview-url');
-                if (settings.showUrl) {
-                    urlEl.textContent = window.location.href;
-                    urlEl.style.display = 'block';
-                } else {
-                     urlEl.style.display = 'none';
-                }
-
-                posterClone.style.position = 'absolute';
-                posterClone.style.top = '-9999px';
-                posterClone.style.left = '0px';
-                posterClone.style.zIndex = '-100';
-                document.body.appendChild(posterClone);
-                
-                try {
-                    await delay(200);
-
-                    const canvas = await html2canvas(posterClone, {
-                        scale: 1, 
-                        useCORS: true,
-                        logging: false,
-                        backgroundColor: null, 
-                        width: width,
-                        height: height,
-                        windowWidth: width,
-                        windowHeight: height
-                    });
-
-                    const link = document.createElement('a');
-                    link.download = `event-poster-${page}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    link.remove();
-                    await delay(500);
-                } catch (err) {
-                    console.error('Oops, something went wrong!', err);
-                    showAlert('Image Generation Failed', `An error occurred while creating image ${page}. Please try again.`);
-                    break;
-                } finally {
-                    document.body.removeChild(posterClone);
-                }
-            }
-
-            loadingIndicator.classList.add('hidden');
-            loadingIndicator.textContent = `Generating image... please wait.`;
-            downloadBtn.disabled = false;
-            downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        }
-        
-        // --- Text Style Editor Logic ---
-        function populateTextStyleEditor() {
-            const categoryKey = textStyleCategorySelect.value;
-            const styles = settings.textStyles[categoryKey];
-            if (!styles) return;
-
-            fontFamilySelect.value = styles.fontFamily;
-            textColorInput.value = styles.color;
-            getEl('font-size-input').value = styles.fontSize;
-            getEl('font-weight-input').value = styles.fontWeight;
-            getEl('stroke-color').value = styles.strokeColor;
-            getEl('stroke-width-input').value = styles.strokeWidth.toFixed(1);
-            getEl('shadow-color').value = styles.shadowColor;
-            getEl('shadow-blur-input').value = styles.shadowBlur;
-            getEl('shadow-offset-x-input').value = styles.shadowOffsetX;
-            getEl('shadow-offset-y-input').value = styles.shadowOffsetY;
-            getEl('background-blur-input').value = settings.backgroundBlur;
-            getEl('overlay-opacity-input').value = Math.round(settings.overlayOpacity * 100);
-        }
-        
-        function handleTextStyleChange(property, value) {
-            const categoryKey = textStyleCategorySelect.value;
-            settings.textStyles[categoryKey][property] = value;
-            
-            // Update the preview immediately
-            updatePosterLook();
-            debouncedSaveState();
-        }
-
-        // Helper to link a slider, number input, and buttons
-        function setupNumericStepper(options) {
-            const { inputId, upId, downId, callback, isFloat = false, step = 1, min, max } = options;
-            const input = getEl(inputId);
-            const upBtn = getEl(upId);
-            const downBtn = getEl(downId);
-
-            const updateValue = (newValue) => {
-                let value = isFloat ? parseFloat(newValue) : parseInt(newValue, 10);
-                if (isNaN(value)) value = min !== undefined ? min : 0;
-                
-                if(min !== undefined) value = Math.max(min, value);
-                if(max !== undefined) value = Math.min(max, value);
-
-                input.value = isFloat ? value.toFixed(1) : value;
-                callback(value);
-            };
-
-            input.addEventListener('change', (e) => updateValue(e.target.value));
-            upBtn.addEventListener('click', () => updateValue(parseFloat(input.value) + step));
-            downBtn.addEventListener('click', () => updateValue(parseFloat(input.value) - step));
-        }
-
-        // --- EVENT LISTENERS ---
-        async function attachListeners() {
-            // Initial Setup on Load
-            datepickerInstance = new Datepicker(eventDateInput, {
-                format: 'dd/mm/yyyy',
-                autohide: true,
-                buttonClass: 'btn'
-            }); 
-            
+        // --- INIT & LISTENERS ---
+        async function init(){
             await loadState();
+            datepickerInstance=new Datepicker(eventDateInput,{format:"dd/mm/yyyy",autohide:!0,buttonClass:"btn"});
             updateFormControls();
             updatePosterLook();
             renderEventsInPreview();
-        
-            window.addEventListener('resize', debounce(updatePreviewSize, 100)); 
-
-            const debouncedUpdatePosterLook = debounce(updatePosterLook, 50);
-
-            // General customization listeners
-            posterSizeSelect.addEventListener('change', async (e) => { 
-                settings.posterSize = e.target.value;
-                updateFormControls();
-                updatePosterLook(); 
-                await saveState();
-            });
-            posterTitleInput.addEventListener('input', e => { settings.title = e.target.value; previewTitle.textContent = e.target.value; debouncedSaveState(); });
-            posterSubtitleInput.addEventListener('input', e => { settings.subtitle = e.target.value; previewSubtitle.textContent = e.target.value; debouncedSaveState(); });
-            posterBackgroundSelect.addEventListener('change', e => { settings.background = e.target.value; updatePosterLook(); saveState(); });
-            posterFooterInput.addEventListener('input', e => { settings.footer = e.target.value; previewFooter.textContent = e.target.value; debouncedSaveState(); });
-            eventsPerPageInput.addEventListener('input', e => { settings.eventsPerPage = parseInt(e.target.value, 10); saveState(); });
-            showTimestampCheckbox.addEventListener('change', e => { settings.showTimestamp = e.target.checked; saveState(); });
-            showUrlCheckbox.addEventListener('change', e => { settings.showUrl = e.target.checked; saveState(); });
-            gradientStartColorInput.addEventListener('input', e => { settings.customGradient.start = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
-            gradientEndColorInput.addEventListener('input', e => { settings.customGradient.end = e.target.value; debouncedUpdatePosterLook(); debouncedSaveState(); });
+            attachListeners();
+        }
+        function attachListeners(){
+            window.addEventListener("resize",debounce(updatePreviewSize,100));
             
-            // Experimental features
-            autoPaginateCheckbox.addEventListener('change', (e) => {
-                settings.autoPaginate = e.target.checked;
-                eventsPerPageContainer.style.display = settings.autoPaginate ? 'none' : 'block';
-                saveState();
-            });
-             autoShortenLocationCheckbox.addEventListener('change', (e) => {
-                settings.autoShortenLocation = e.target.checked;
-                renderEventsInPreview();
-                saveState();
-            });
-
-            // Image background listeners
-            uploadImageBtn.addEventListener('click', () => backgroundImageInput.click());
-            backgroundImageInput.addEventListener('change', e => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
-                
-                settings.backgroundImage = file;
-                currentImageObjectUrl = URL.createObjectURL(file);
-                
+            posterSizeSelect.addEventListener("change",async e=>(settings.posterSize=e.target.value,updateFormControls(),updatePosterLook(),await saveState()));
+            posterTitleInput.addEventListener("input",e=>{settings.title=e.target.value,previewTitle.textContent=e.target.value,debouncedSaveState()});
+            posterSubtitleInput.addEventListener("input",e=>{settings.subtitle=e.target.value,previewSubtitle.textContent=e.target.value,debouncedSaveState()});
+            posterBackgroundSelect.addEventListener("change", e => {
+                settings.background = e.target.value;
                 updatePosterLook();
+                const accordionContent = imageBackgroundControls.closest('.accordion-content');
+                if (accordionContent && accordionContent.style.maxHeight && accordionContent.style.maxHeight !== '0px') {
+                    setTimeout(() => { accordionContent.style.maxHeight = accordionContent.scrollHeight + "px"; }, 50);
+                }
                 saveState();
-                backgroundImageInput.value = '';
             });
+            posterFooterInput.addEventListener("input",e=>{settings.footer=e.target.value,previewFooter.textContent=e.target.value,debouncedSaveState()});
+            eventsPerPageInput.addEventListener("input",e=>{settings.eventsPerPage=parseInt(e.target.value,10),saveState()});
+            showTimestampCheckbox.addEventListener("change",e=>{settings.showTimestamp=e.target.checked,saveState()});
+            showUrlCheckbox.addEventListener("change",e=>{settings.showUrl=e.target.checked,saveState()});
+            autoPaginateCheckbox.addEventListener("change",e=>{settings.autoPaginate=e.target.checked,eventsPerPageContainer.style.display=settings.autoPaginate?"none":"block",saveState()});
+            autoShortenLocationCheckbox.addEventListener("change",e=>{settings.autoShortenLocation=e.target.checked,renderEventsInPreview(),saveState()});
+            
+            gradientStartColorInput.addEventListener("input",debounce(e=>{settings.customGradient.start=e.target.value,updatePosterLook(),saveState()}));
+            gradientEndColorInput.addEventListener("input",debounce(e=>{settings.customGradient.end=e.target.value,updatePosterLook(),saveState()}));
+            
+            uploadImageBtn.addEventListener("click",()=>backgroundImageInput.click());
             removeImageBtn.addEventListener('click', () => {
                 if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
                 currentImageObjectUrl = null;
@@ -1787,109 +678,80 @@
                 updatePosterLook();
                 saveState();
             });
-
-
-            // Direct editing listeners
-            posterContent.addEventListener('focusout', handleDirectEdit);
-            posterContent.addEventListener('keydown', preventLineBreaks);
-
-            // Form listeners
-            eventForm.addEventListener('submit', addEvent);
-            isFreeCheckbox.addEventListener('change', () => togglePriceInput('free'));
-            isTbaCheckbox.addEventListener('change', () => togglePriceInput('tba'));
-            eventPriceInput.addEventListener('input', () => togglePriceInput('input'));
-            isDateTbaCheckbox.addEventListener('change', toggleDateInput);
-
-            // Button listeners
-            downloadBtn.addEventListener('click', downloadImage);
-            clearBtn.addEventListener('click', clearAllEvents);
-            sortBtn.addEventListener('click', async () => {
-                sortEvents();
-                await saveState();
-                renderEventsInPreview();
-            });
-            previewListContainer.addEventListener('click', handleListInteraction);
-            exportBtn.addEventListener('click', exportData);
-            importBtn.addEventListener('click', () => importInput.click());
-            importInput.addEventListener('change', importData);
+            backgroundImageInput.addEventListener("change",e=>{const t=e.target.files[0];t&&(currentImageObjectUrl&&URL.revokeObjectURL(currentImageObjectUrl),settings.backgroundImage=t,currentImageObjectUrl=URL.createObjectURL(t),updatePosterLook(),saveState(),backgroundImageInput.value="")});
             
-            // Text Style Editor Listeners
-            textStyleCategorySelect.addEventListener('change', populateTextStyleEditor);
-
-            fontFamilySelect.addEventListener('change', e => handleTextStyleChange('fontFamily', e.target.value));
-            textColorInput.addEventListener('input', e => handleTextStyleChange('color', e.target.value));
-            
-            setupNumericStepper({ inputId: 'font-size-input', upId: 'font-size-up', downId: 'font-size-down', callback: (value) => handleTextStyleChange('fontSize', value), min: 1 });
-            setupNumericStepper({ inputId: 'font-weight-input', upId: 'font-weight-up', downId: 'font-weight-down', callback: (value) => handleTextStyleChange('fontWeight', value), step: 100, min: 100, max: 900 });
-            setupNumericStepper({ inputId: 'stroke-width-input', upId: 'stroke-width-up', downId: 'stroke-width-down', callback: (value) => handleTextStyleChange('strokeWidth', value), isFloat: true, step: 0.1, min: 0, max: 10 });
-            
-            getEl('stroke-color').addEventListener('input', e => handleTextStyleChange('strokeColor', e.target.value));
-            getEl('shadow-color').addEventListener('input', e => handleTextStyleChange('shadowColor', e.target.value));
-            
-            setupNumericStepper({ inputId: 'shadow-blur-input', upId: 'shadow-blur-up', downId: 'shadow-blur-down', callback: (value) => handleTextStyleChange('shadowBlur', value), min: 0, max: 50 });
-            setupNumericStepper({ inputId: 'shadow-offset-x-input', upId: 'shadow-offset-x-up', downId: 'shadow-offset-x-down', callback: (value) => handleTextStyleChange('shadowOffsetX', value), min: -50, max: 50 });
-            setupNumericStepper({ inputId: 'shadow-offset-y-input', upId: 'shadow-offset-y-up', downId: 'shadow-offset-y-down', callback: (value) => handleTextStyleChange('shadowOffsetY', value), min: -50, max: 50 });
-
-            setupNumericStepper({ inputId: 'background-blur-input', upId: 'background-blur-up', downId: 'background-blur-down', callback: (value) => { settings.backgroundBlur = value; updatePosterLook(); debouncedSaveState(); }, min: 0, max: 50 });
-            setupNumericStepper({ inputId: 'overlay-opacity-input', upId: 'overlay-opacity-up', downId: 'overlay-opacity-down', callback: (value) => { settings.overlayOpacity = value / 100; updatePosterLook(); debouncedSaveState(); }, min: 0, max: 100 });
-       
-            // Google Sheet Fetch listener
-            fetchGSheetBtn.addEventListener('click', async () => {
-                const url = gSheetUrlInput.value.trim();
-                if (!url) {
-                    showAlert('Invalid URL', 'Please enter a Google Sheet URL.');
-                    return;
+            backgroundBlurSlider.addEventListener('input', debounce(e => { settings.backgroundBlur = e.target.value; updatePosterLook(); saveState(); }));
+            overlayTypeSelect.addEventListener('change', e => {
+                settings.overlayType = e.target.value;
+                overlayControls.classList.toggle('hidden', e.target.value === 'none');
+                overlaySolidControls.classList.toggle('hidden', e.target.value !== 'solid');
+                overlayGradientControls.classList.toggle('hidden', e.target.value !== 'gradient');
+                updatePosterLook();
+                const accordionContent = overlayControls.closest('.accordion-content');
+                 if (accordionContent && accordionContent.style.maxHeight && accordionContent.style.maxHeight !== '0px') {
+                    setTimeout(() => { accordionContent.style.maxHeight = accordionContent.scrollHeight + "px"; }, 50);
                 }
-                
-                // Save the URL for next time
-                settings.gSheetUrl = url;
-                await saveState();
+                saveState();
+            });
+            overlayColorInput.addEventListener('input', debounce(e => { settings.overlayColor = e.target.value; updatePosterLook(); saveState(); }));
+            overlayGradientStartInput.addEventListener('input', debounce(e => { settings.overlayGradient.start = e.target.value; updatePosterLook(); saveState(); }));
+            overlayGradientEndInput.addEventListener('input', debounce(e => { settings.overlayGradient.end = e.target.value; updatePosterLook(); saveState(); }));
+            overlayGradientDirectionSlider.addEventListener('input', debounce(e => { settings.overlayGradient.direction = e.target.value; updatePosterLook(); saveState(); }));
+            overlayOpacitySlider.addEventListener('input', debounce(e => { settings.overlayOpacity = e.target.value; updatePosterLook(); saveState(); }));
 
-                showStatusMessage('Fetching data...');
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
-                    }
-                    const csvText = await response.text();
-                    
-                    findAndProcessCsv(csvText, async (results) => {
-                        const parsedEvents = parseCsvData(results);
-                        if (parsedEvents) {
-                            events = parsedEvents;
-                            sortEvents();
-                            await saveState();
-                            renderEventsInPreview();
-                            showStatusMessage('Data fetched successfully!');
-                        }
-                    });
+            posterContent.addEventListener("focusout",handleDirectEdit);
+            posterContent.addEventListener("keydown",preventLineBreaks);
+            eventForm.addEventListener("submit",addEvent);
+            isFreeCheckbox.addEventListener("change",()=>togglePriceInput("free"));
+            isTbaCheckbox.addEventListener("change",()=>togglePriceInput("tba"));
+            eventPriceInput.addEventListener("input",()=>togglePriceInput("input"));
+            isDateTbaCheckbox.addEventListener("change",toggleDateInput);
+            downloadBtn.addEventListener("click",downloadImage);
+            clearBtn.addEventListener("click",clearAllEvents);
+            sortBtn.addEventListener("click",async()=>{sortEvents(),await saveState(),renderEventsInPreview()});
+            previewListContainer.addEventListener("click",handleListInteraction);
+            exportBtn.addEventListener("click",exportData);
+            importBtn.addEventListener("click",()=>importInput.click());
+            importInput.addEventListener("change",importData);
+            
+            textStyleCategorySelect.addEventListener("change",populateTextStyleEditor);
+            fontFamilySelect.addEventListener("change",e=>handleTextStyleChange("fontFamily",e.target.value));
+            textColorInput.addEventListener("input",debounce(e=>handleTextStyleChange("color",e.target.value)));
+            fontSizeInput.addEventListener("input",debounce(e=>handleTextStyleChange("fontSize",parseInt(e.target.value,10))));
+            fontWeightInput.addEventListener("input",debounce(e=>handleTextStyleChange("fontWeight",parseInt(e.target.value,10))));
+            strokeColorInput.addEventListener("input",debounce(e=>handleTextStyleChange("strokeColor",e.target.value)));
+            strokeWidthInput.addEventListener("input",debounce(e=>handleTextStyleChange("strokeWidth",parseFloat(e.target.value))));
+            shadowColorInput.addEventListener("input",debounce(e=>handleTextStyleChange("shadowColor",e.target.value)));
+            shadowBlurInput.addEventListener("input",debounce(e=>handleTextStyleChange("shadowBlur",parseInt(e.target.value,10))));
+            shadowOffsetXInput.addEventListener("input",debounce(e=>handleTextStyleChange("shadowOffsetX",parseInt(e.target.value,10))));
+            shadowOffsetYInput.addEventListener("input",debounce(e=>handleTextStyleChange("shadowOffsetY",parseInt(e.target.value,10))));
 
-                } catch (error) {
-                    console.error('Error fetching Google Sheet:', error);
-                    showAlert('Fetch Error', 'Could not fetch data from the provided URL. Please ensure it is a valid, publicly published CSV link.');
+
+            getEl("controls-accordion").addEventListener("click",e=>{
+                const n=e.target.closest(".accordion-header");
+                if(n){
+                    const o=n.nextElementSibling,s=n.querySelector("svg");
+                    o.style.maxHeight?(o.style.maxHeight=null,s.style.transform="rotate(0deg)"):(o.style.maxHeight=o.scrollHeight+"px",s.style.transform="rotate(-180deg)")
                 }
             });
-            
-            // Accordion listener
-            getEl('controls-accordion').addEventListener('click', (e) => {
-                const header = e.target.closest('.accordion-header');
-                if (!header) return;
-
-                const content = header.nextElementSibling;
-                const icon = header.querySelector('svg');
-
-                if (content.style.maxHeight) {
-                    content.style.maxHeight = null;
-                    icon.style.transform = 'rotate(0deg)';
-                } else {
-                    content.style.maxHeight = content.scrollHeight + "px";
-                    icon.style.transform = 'rotate(-180deg)';
+            fetchGSheetBtn.addEventListener("click",async()=>{
+                const e=gSheetUrlInput.value.trim();
+                if(!e)return void showAlert("Invalid URL","Please enter a Google Sheet URL.");
+                settings.gSheetUrl=e,await saveState(),showStatusMessage("Fetching data...");
+                try{
+                    const t=await fetch(e);
+                    if(!t.ok)throw new Error(`Network response was not ok: ${t.statusText}`);
+                    const n=await t.text();
+                    findAndProcessCsv(n,async e=>{
+                        const t=parseCsvData(e);
+                        t&&(events=t,sortEvents(),await saveState(),renderEventsInPreview(),showStatusMessage("Data fetched successfully!"))
+                    })
+                }catch(o){
+                    console.error("Error fetching Google Sheet:",o),showAlert("Fetch Error","Could not fetch data from the provided URL. Please ensure it is a valid, publicly published CSV link.")
                 }
             });
         }
-
-        document.addEventListener('DOMContentLoaded', attachListeners);
-
+        document.addEventListener('DOMContentLoaded', init);
     })();
     </script>
 </body>
